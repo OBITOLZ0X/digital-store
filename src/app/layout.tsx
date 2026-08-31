@@ -5,6 +5,8 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+export const runtime = 'edge';
+
 export const metadata: Metadata = {
   title: { default: "DigitalStore — Premium Digital Products", template: "%s | DigitalStore" },
   description: "Premium digital marketplace — subscriptions, IPTV, software keys, gift cards. Instant delivery, wallet payments.",
