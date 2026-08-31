@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 import { sendEmail, verificationEmail } from '@/lib/email'
 
+export const runtime = 'edge'
+
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()

@@ -1,6 +1,9 @@
 import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { AdminSidebar, AdminMobileNav } from '@/app/components/layout/admin-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ui'
+
+export const runtime = 'edge'
+
 export default function Stub(){ return (
   <div className="flex flex-col min-h-screen">
     <Navbar />

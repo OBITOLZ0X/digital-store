@@ -3,6 +3,9 @@ import { createServerClient } from '@supabase/ssr'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 import { cookies } from 'next/headers'
 
+export const runtime = 'edge'
+
+
 const BUCKET = 'images'
 
 export async function POST(req: NextRequest) {

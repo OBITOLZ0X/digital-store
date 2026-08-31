@@ -1,6 +1,9 @@
 import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ui'
 
+export const runtime = 'edge'
+
+
 export default function FAQPage(){
   const faqs = [
     { q:'How does the wallet system work?', a:'You top up your wallet via a deposit request (CCP, BaridiMob, Bank Transfer, Crypto). An admin approves it and your balance is credited. You then purchase products instantly with your balance — no card needed at checkout.' },

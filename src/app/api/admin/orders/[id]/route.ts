@@ -5,6 +5,9 @@ import { cookies } from 'next/headers'
 import { generateId } from '@/lib/utils'
 import { sendEmail, orderConfirmationEmail } from '@/lib/email'
 
+export const runtime = 'edge'
+
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const cookieStore = await cookies()

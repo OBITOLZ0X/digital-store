@@ -3,6 +3,9 @@ import { ProductGrid } from '@/app/components/products/product-card'
 import { getStoreProducts } from '@/lib/actions/products'
 import Link from 'next/link'
 
+export const runtime = 'edge'
+
+
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }){
   const params = await searchParams
   const sort = params.sort as string | undefined

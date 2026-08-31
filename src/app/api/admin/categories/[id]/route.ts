@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 
+export const runtime = 'edge'
+
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params

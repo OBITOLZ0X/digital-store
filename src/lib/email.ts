@@ -1,38 +1,87 @@
-// Email utility — uses nodemailer with SMTP config from env.
-// Falls back gracefully (returns ok:false) when SMTP is not configured,
-// so the app never crashes because email is missing.
-import nodemailer from 'nodemailer'
-
+// Email utility — hybrid: MailChannels (Cloudflare Workers / edge) + Nodemailer (Node/Vercel).
+// On Cloudflare Pages/Workers TCP to smtp.gmail.com:587 is blocked — so we send via HTTP.
+// MailChannels is 100% free on Cloudflare (no API key, uses fetch) — works on edge.
+// Locally / on Vercel we still use Gmail SMTP via nodemailer.
 type EmailPayload = { to: string; subject: string; html: string; text?: string }
 
-function getTransporter(): nodemailer.Transporter | null {
+async function sendViaMailChannels(payload: EmailPayload): Promise<{ ok: boolean; error?: string }> {
+  const fromEmail = (process.env.MAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@digitalstore.dz').trim()
+  const fromName = process.env.MAIL_FROM_NAME || 'DigitalStore'
+  // MailChannels requires a domain that doesn't have strict DMARC p=reject (gmail.com has p=reject).
+  // If fromEmail is gmail.com, rewrite to noreply@digitalstore.dz but keep reply-to as gmail.
+  const isGmailFrom = fromEmail.toLowerCase().endsWith('@gmail.com')
+  const effectiveFrom = isGmailFrom ? 'noreply@digitalstore.dz' : fromEmail
+  const replyTo = isGmailFrom ? fromEmail : undefined
+
+  const body = {
+    personalizations: [
+      {
+        to: [{ email: payload.to }],
+        // dkim/spf handled by Cloudflare Email Routing / MailChannels relay
+      },
+    ],
+    from: { email: effectiveFrom, name: fromName },
+    reply_to: replyTo ? { email: replyTo, name: fromName } : undefined,
+    subject: payload.subject,
+    content: [
+      { type: 'text/plain', value: payload.text || payload.html.replace(/<[^>]+>/g, '') },
+      { type: 'text/html', value: payload.html },
+    ],
+  }
+
+  const res = await fetch('https://api.mailchannels.net/tx/v1/send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (res.status === 202 || res.status === 200 || res.status === 204) return { ok: true }
+  const txt = await res.text().catch(() => '')
+  return { ok: false, error: `MailChannels ${res.status}: ${txt.slice(0, 500)}` }
+}
+
+async function sendViaNodemailer(payload: EmailPayload): Promise<{ ok: boolean; error?: string }> {
+  // Dynamic import — nodemailer is Node-only and breaks edge bundling if imported at top level.
+  // @ts-ignore
+  const nodemailer = (await import('nodemailer')).default ?? (await import('nodemailer'))
   const host = process.env.SMTP_HOST
   const port = Number(process.env.SMTP_PORT || 587)
   const user = process.env.SMTP_USER
   const passRaw = process.env.SMTP_PASS
-  if (!host || !user || !passRaw) return null
-  // Gmail App Passwords are shown with spaces — SMTP needs them without spaces
+  if (!host || !user || !passRaw) return { ok: false, error: 'SMTP not configured' }
   const pass = passRaw.replace(/\s+/g, '')
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  })
+  const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } })
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER
+  await transporter.sendMail({ from, to: payload.to, subject: payload.subject, html: payload.html, text: payload.text })
+  return { ok: true }
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<{ ok: boolean; error?: string }> {
+  // 1) On edge / Cloudflare, try MailChannels (HTTP) first — SMTP TCP is blocked there.
+  // Detect edge: NEXT_RUNTIME=edge is set by Next.js, or CF_PAGES env.
+  const isEdge = (process.env.NEXT_RUNTIME as string) === 'edge' || !!process.env.CF_PAGES || typeof (globalThis as any).EdgeRuntime !== 'undefined'
+  if (isEdge) {
+    const mc = await sendViaMailChannels(payload).catch((e) => ({ ok: false as const, error: e instanceof Error ? e.message : String(e) }))
+    if (mc.ok) return mc
+    console.warn('[email] MailChannels failed, will try SMTP fallback (likely blocked on edge):', mc.error)
+    // Fallthrough to SMTP attempt for logging — but it will almost certainly fail on Workers.
+  }
+
+  // 2) Try MailChannels even on Node — it's free and doesn't need SMTP credentials, so prefer it if SMTP is not configured.
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const mc = await sendViaMailChannels(payload).catch((e) => ({ ok: false as const, error: e instanceof Error ? e.message : String(e) }))
+    if (mc.ok) return mc
+    console.log('[email] No SMTP and MailChannels failed:', mc.error)
+    return { ok: false, error: mc.error || 'No email transport configured' }
+  }
+
+  // 3) Full SMTP path (local dev + Vercel)
   try {
-    const transporter = getTransporter()
-    if (!transporter) {
-      console.log('[email] SMTP not configured — skipped sending to', payload.to, '| subject:', payload.subject)
-      return { ok: false, error: 'SMTP not configured' }
-    }
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER
-    await transporter.sendMail({ from, to: payload.to, subject: payload.subject, html: payload.html, text: payload.text })
-    return { ok: true }
+    return await sendViaNodemailer(payload)
   } catch (e) {
-    console.error('[email] send failed:', e)
+    console.error('[email] SMTP send failed:', e)
+    // Last resort: try MailChannels as fallback even when SMTP is configured
+    const mc = await sendViaMailChannels(payload).catch(() => null)
+    if (mc?.ok) return mc
     return { ok: false, error: e instanceof Error ? e.message : 'send failed' }
   }
 }

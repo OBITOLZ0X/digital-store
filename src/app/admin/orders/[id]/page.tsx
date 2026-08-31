@@ -1,5 +1,8 @@
 import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ui'
+
+export const runtime = 'edge'
+
 export default async function DetailStub({ params }: { params: Promise<Record<string,string>> }){
   const p = await params
   return (

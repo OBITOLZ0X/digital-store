@@ -2,6 +2,9 @@ import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { ProductGrid } from '@/app/components/products/product-card'
 import { getStoreProducts } from '@/lib/actions/products'
 
+export const runtime = 'edge'
+
+
 export default async function SearchPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }){
   const p = await searchParams
   const q = p.q || ''

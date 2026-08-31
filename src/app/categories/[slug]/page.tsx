@@ -3,6 +3,9 @@ import { ProductGrid } from '@/app/components/products/product-card'
 import { getStoreProducts } from '@/lib/actions/products'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 
+export const runtime = 'edge'
+
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }){
   const { slug } = await params
   let products: Record<string,unknown>[] = []

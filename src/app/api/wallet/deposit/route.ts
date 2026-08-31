@@ -5,6 +5,9 @@ import { getServerSupabase } from '@/lib/supabase/server-client'
 import { generateId } from '@/lib/utils'
 import { ensureStorageBucket, uploadImageToStorage } from '@/lib/actions/storage'
 
+export const runtime = 'edge'
+
+
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies()

@@ -5,6 +5,9 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+export const runtime = 'edge'
+
+
 export default async function WalletPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams
   const cookieStore = await cookies()

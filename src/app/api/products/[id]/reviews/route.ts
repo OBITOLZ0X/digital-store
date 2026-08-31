@@ -3,6 +3,9 @@ import { createServerClient } from '@supabase/ssr'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 import { cookies } from 'next/headers'
 
+export const runtime = 'edge'
+
+
 // POST /api/products/[id]/reviews — create a review (only when reviews_enabled=true)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: productId } = await params

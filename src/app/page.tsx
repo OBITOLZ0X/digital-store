@@ -7,6 +7,9 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Zap, Shield, Clock, Headphones, TrendingUp, Star, Tv, Gamepad2, KeyRound, Gift, MonitorSmartphone } from 'lucide-react'
 
+export const runtime = 'edge'
+
+
 async function getUserAndWallet() {
   try {
     const cookieStore = await cookies()

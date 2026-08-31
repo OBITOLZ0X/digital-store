@@ -6,6 +6,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UsersClient from './users-client'
 
+export const runtime = 'edge'
+
+
 export default async function AdminUsersPage(){
   const cookieStore = await cookies()
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
