@@ -9,7 +9,6 @@ import { PurchaseBox } from '@/app/products/[slug]/purchase-box'
 import { ReviewsSection } from '@/app/components/products/product-reviews'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 
-export const runtime = 'edge'
 
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }){

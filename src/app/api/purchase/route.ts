@@ -3,7 +3,6 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { purchaseProduct } from '@/lib/actions/purchase'
 
-export const runtime = 'edge'
 
 
 export async function POST(req: NextRequest){

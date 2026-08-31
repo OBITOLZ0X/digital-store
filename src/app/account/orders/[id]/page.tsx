@@ -6,7 +6,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { DeliveryCredentials } from './delivery-credentials'
 
-export const runtime = 'edge'
 
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }){

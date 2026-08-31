@@ -4,7 +4,6 @@ import { getServerSupabase } from '@/lib/supabase/server-client'
 import { cookies } from 'next/headers'
 import { generateId } from '@/lib/utils'
 
-export const runtime = 'edge'
 
 
 async function requireAdmin() {

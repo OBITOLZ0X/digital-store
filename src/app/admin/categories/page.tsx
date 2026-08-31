@@ -6,7 +6,6 @@ import { getServerSupabase } from '@/lib/supabase/server-client'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export const runtime = 'edge'
 
 
 export default async function AdminCategoriesPage() {

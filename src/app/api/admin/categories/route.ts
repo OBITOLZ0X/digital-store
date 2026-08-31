@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 
-export const runtime = 'edge'
 
 
 export async function GET() {

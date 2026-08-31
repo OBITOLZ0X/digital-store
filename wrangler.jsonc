@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "digital-store",
+  "compatibility_date": "2026-08-31",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "digital-store"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://lhvyxeqclzmnxzfvbghp.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Oc6RTKmbfCRzjxQVD6P_BA_fV4-gmox",
+    "NEXT_PUBLIC_APP_URL": "https://digital-store.abderrezaklz1x.workers.dev",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_PORT": "587",
+    "SMTP_USER": "anyalzbot@gmail.com",
+    "SMTP_FROM": "anyalzbot@gmail.com",
+    "EMAIL_FROM_ADDRESS": "anyalzbot@gmail.com",
+    "EMAIL_FROM_NAME": "DigitalStore",
+    "DEFAULT_CURRENCY": "DZD"
+  }
+}

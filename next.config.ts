@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Cloudflare Pages: keep bundle under 25 MiB — keep static pages static, externalize heavy Node-only deps
-  serverExternalPackages: ['nodemailer'],
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
@@ -22,3 +21,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());

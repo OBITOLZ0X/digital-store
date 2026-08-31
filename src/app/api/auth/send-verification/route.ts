@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server-client'
 import { sendEmail, verificationEmail } from '@/lib/email'
 
-export const runtime = 'edge'
 
 
 // POST { email } — resend verification (free via Gmail)

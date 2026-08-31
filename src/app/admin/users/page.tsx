@@ -6,7 +6,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UsersClient from './users-client'
 
-export const runtime = 'edge'
 
 
 export default async function AdminUsersPage(){
