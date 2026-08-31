@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Cloudflare-compatible: no sharp, no standalone requirement
+  // Cloudflare Pages: keep bundle under 25 MiB — keep static pages static, externalize heavy Node-only deps
+  serverExternalPackages: ['nodemailer'],
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   images: {
     unoptimized: true,
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
