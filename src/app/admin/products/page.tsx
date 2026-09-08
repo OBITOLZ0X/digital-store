@@ -1,6 +1,6 @@
 import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { AdminSidebar, AdminMobileNav } from '@/app/components/layout/admin-layout'
-import { ProductsCatalog } from '@/app/components/admin/products-catalog'
+import { ProductsManager } from '@/app/components/admin/products-manager'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,7 @@ export default function AdminProductsPage() {
           <AdminSidebar />
           <div className="flex-1 min-w-0 space-y-4">
             <AdminMobileNav />
-            <ProductsCatalog initialTab="products" />
+            <ProductsManager />
           </div>
         </div>
       </div>

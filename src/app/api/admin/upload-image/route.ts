@@ -1,9 +1,11 @@
+// Store images in KV (base64) — works everywhere (Node + Cloudflare Workers), no R2 needed.
+// Images are small (<=5MB limit here → base64 ~6.7MB, KV value limit 25MB).
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 import { isAdminRequest } from '@/lib/auth'
+import { getKv } from '@/lib/store'
 
-const BUCKET_DIR = path.join(process.cwd(), 'data', 'uploads')
+const MAX = 5 * 1024 * 1024
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -13,18 +15,29 @@ export async function POST(req: NextRequest) {
   const folder = (formData.get('folder') as string) || 'general'
 
   if (!file || file.size === 0) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-  if (!allowedTypes.includes(file.type)) return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, WebP, GIF allowed.' }, { status: 400 })
-  if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'File too large. Max 5MB.' }, { status: 400 })
+  if (!ALLOWED.includes(file.type)) return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, WebP, GIF allowed.' }, { status: 400 })
+  if (file.size > MAX) return NextResponse.json({ error: 'File too large. Max 5MB.' }, { status: 400 })
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const ext = file.type.split('/')[1] || 'png'
-  const fileName = `${folder}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const key = `img:${folder}:${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
-  const dir = path.join(BUCKET_DIR, folder)
-  fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(path.join(dir, fileName), buffer)
+  const kv = await getKv()
+  if (kv) {
+    await kv.put(key, buffer.toString('base64'), { metadata: { type: file.type } })
+    return NextResponse.json({ success: true, url: `/api/images/${key.slice(4)}` })
+  }
 
-  return NextResponse.json({ success: true, url: `/data/uploads/${folder}/${fileName}` })
+  // Node host fallback: filesystem
+  try {
+    const fs = await import('fs')
+    const path = await import('path')
+    const dir = path.join(process.cwd(), 'data', 'uploads', folder)
+    fs.mkdirSync(dir, { recursive: true })
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    fs.writeFileSync(path.join(dir, fileName), buffer)
+    return NextResponse.json({ success: true, url: `/api/images/uploads/${folder}/${fileName}` })
+  } catch (err) {
+    return NextResponse.json({ error: 'Storage unavailable: ' + (err instanceof Error ? err.message : 'unknown') }, { status: 500 })
+  }
 }

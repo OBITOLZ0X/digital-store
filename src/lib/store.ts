@@ -92,7 +92,7 @@ const DEFAULT_DATA: StoreData = {
 
 // Cloudflare Workers KV binding (only available when running on Cloudflare via OpenNext).
 // Imported dynamically so the module is never loaded on a plain Node host.
-async function getKv(): Promise<KVNamespace | null> {
+export async function getKv(): Promise<KVNamespace | null> {
   try {
     const mod = await import('@opennextjs/cloudflare')
     const ctx = mod.getCloudflareContext()
