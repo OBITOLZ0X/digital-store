@@ -1,7 +1,6 @@
 // Storefront chrome — no account UI, no cart, no balance.
 import Link from 'next/link'
 import { Search, Menu, X } from 'lucide-react'
-import { Button } from '@/app/components/ui/ui'
 import { getAllCategories } from '@/lib/queries'
 import { readStore } from '@/lib/store'
 
@@ -40,8 +39,6 @@ export async function Navbar() {
             <form action="/search" className="md:hidden">
               <button type="submit" aria-label="Search" className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white"><Search className="h-5 w-5" /></button>
             </form>
-            {/* Admin entry point only — customers never log in */}
-            <Link href="/admin"><Button variant="secondary" size="sm">Admin</Button></Link>
           </div>
         </div>
       </div>

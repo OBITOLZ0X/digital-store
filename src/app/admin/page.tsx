@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Eye, TrendingUp, Package, Tag, Contact, Loader2, BarChart3 } from 'lucide-react'
