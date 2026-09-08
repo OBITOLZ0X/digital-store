@@ -3,7 +3,7 @@
 // and visit analytics. Admin credentials live in env vars (secret), never here.
 //
 // Storage backends, in order:
-//   1. Cloudflare KV   — if env.KV_BINDING / process.env.KV_REST_API_URL set (workers/edge)
+//   1. Cloudflare KV   — via @opennextjs/cloudflare getCloudflareContext() (workers/edge)
 //   2. Filesystem      — data/store.data.json (node host / `next start`)
 
 import fs from 'fs'
@@ -27,13 +27,13 @@ export interface Product {
   short_description: string
   category_id: string | null
   image_url: string | null
+  images: string[] // gallery for the product page slider (first = cover)
   price: number // effective display price (min of variants when multi)
   compare_at_price: number | null
   status: 'active' | 'hidden'
   is_featured: boolean
   is_popular: boolean
   tags: string[]
-  // Purchase is ALWAYS via a contact channel chosen here
   contact_channels: string[] // ids of ContactChannel
   terms?: string
   variants: ProductVariant[]
@@ -64,6 +64,21 @@ export interface StoreSettings {
   siteName: string
   tagline: string
   currency: string
+  // --- Homepage control (admin Settings) ---
+  heroBadge: string // small pill text above the title
+  heroTitle: string // main headline (markdown-ish plain text)
+  heroSubtitle: string // paragraph under the title
+  heroCtaText: string // primary button label
+  heroImages: string[] // Netflix-style backdrop images (cycled as slider)
+  sections: SectionConfig[] // ordered, toggleable homepage sections
+}
+
+export interface SectionConfig {
+  key: string // 'categories' | 'featured' | 'popular' | 'newest' | 'howitworks'
+  label: string // admin-facing label
+  title: string // section heading shown to visitors
+  visible: boolean
+  sort: number
 }
 
 export interface StoreData {
@@ -83,8 +98,28 @@ export interface VisitRecord {
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'store.data.json')
 
+export const DEFAULT_SECTIONS: SectionConfig[] = [
+  { key: 'categories', label: 'Categories', title: 'Browse Categories', visible: true, sort: 1 },
+  { key: 'featured', label: 'Featured', title: 'Featured', visible: true, sort: 2 },
+  { key: 'popular', label: 'Popular', title: 'Popular', visible: true, sort: 3 },
+  { key: 'newest', label: 'New Arrivals', title: 'New Arrivals', visible: true, sort: 4 },
+  { key: 'howitworks', label: 'How it works', title: 'How it works', visible: true, sort: 5 },
+]
+
+export const DEFAULT_SETTINGS: StoreSettings = {
+  siteName: 'DigitalStore',
+  tagline: 'Premium digital products',
+  currency: 'DZD',
+  heroBadge: 'Order directly via WhatsApp • Telegram • No account needed',
+  heroTitle: 'Premium Digital Products at the Best Prices',
+  heroSubtitle: 'Subscriptions, IPTV, software licenses, game cards and gift cards. Browse, choose your plan, and message us on your favorite app — we handle the rest personally.',
+  heroCtaText: 'Explore Products',
+  heroImages: [],
+  sections: DEFAULT_SECTIONS,
+}
+
 const DEFAULT_DATA: StoreData = {
-  settings: { siteName: 'DigitalStore', tagline: 'Premium digital products', currency: 'DZD' },
+  settings: DEFAULT_SETTINGS,
   categories: [],
   products: [],
   contacts: [],
@@ -118,19 +153,29 @@ async function kvPutStore(data: StoreData): Promise<boolean> {
   return true
 }
 
+function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings {
+  const merged = { ...DEFAULT_SETTINGS, ...(s || {}) }
+  if (!Array.isArray(merged.sections) || merged.sections.length === 0) merged.sections = DEFAULT_SECTIONS
+  if (!Array.isArray(merged.heroImages)) merged.heroImages = []
+  // keep section list in sync with defaults (new keys get added, removed keys dropped)
+  const byKey = new Map(merged.sections.map(x => [x.key, x]))
+  merged.sections = DEFAULT_SECTIONS.map(def => ({ ...def, ...(byKey.get(def.key) || {}) })).sort((a, b) => a.sort - b.sort)
+  return merged
+}
+
 export async function readStore(): Promise<StoreData> {
   try {
     const fromKv = await kvGetStore()
-    if (fromKv) return { ...DEFAULT_DATA, ...fromKv }
+    if (fromKv) return { ...DEFAULT_DATA, ...fromKv, settings: normalizeSettings(fromKv.settings) }
   } catch { /* fall through to fs */ }
   try {
-    if (!fs.existsSync(DATA_FILE)) return DEFAULT_DATA
+    if (!fs.existsSync(DATA_FILE)) return { ...DEFAULT_DATA, settings: normalizeSettings(DEFAULT_DATA.settings) }
     const raw = fs.readFileSync(DATA_FILE, 'utf8')
     const parsed = JSON.parse(raw) as StoreData
-    return { ...DEFAULT_DATA, ...parsed, settings: { ...DEFAULT_DATA.settings, ...parsed.settings } }
+    return { ...DEFAULT_DATA, ...parsed, settings: normalizeSettings(parsed.settings) }
   } catch (err) {
     console.error('[store] failed to read data file:', err)
-    return DEFAULT_DATA
+    return { ...DEFAULT_DATA, settings: normalizeSettings(DEFAULT_DATA.settings) }
   }
 }
 

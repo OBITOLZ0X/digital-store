@@ -26,6 +26,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.short_description !== undefined) p.short_description = String(body.short_description)
   if (body.category_id !== undefined) p.category_id = body.category_id || null
   if (body.image_url !== undefined) p.image_url = body.image_url || null
+  if (body.images !== undefined) {
+    p.images = Array.isArray(body.images) ? body.images.map(String) : []
+    if (p.images.length && !p.image_url) p.image_url = p.images[0]
+  }
   if (body.status !== undefined) p.status = body.status === 'hidden' ? 'hidden' : 'active'
   if (body.is_featured !== undefined) p.is_featured = !!body.is_featured
   if (body.is_popular !== undefined) p.is_popular = !!body.is_popular

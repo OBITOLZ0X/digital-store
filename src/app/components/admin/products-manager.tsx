@@ -17,6 +17,7 @@ interface Product {
   price: number
   status: string
   image_url: string | null
+  images?: string[]
   is_featured: boolean
   is_popular: boolean
   description?: string
@@ -53,6 +54,7 @@ export function ProductsManager() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [hasVariants, setHasVariants] = useState(true)
   const [durations, setDurations] = useState<Duration[]>([
@@ -83,6 +85,7 @@ export function ProductsManager() {
   function resetForm() {
     setForm({ ...EMPTY_FORM })
     setImageUrl(null)
+    setImages([])
     setHasVariants(true)
     setDurations([{ key: Math.random().toString(36).slice(2, 8), name: '1 Month', duration_days: '30', price: '', compare_at_price: '' }])
     setSelectedChannels([])
@@ -109,6 +112,7 @@ export function ProductsManager() {
       is_popular: !!p.is_popular,
     })
     setImageUrl(p.image_url)
+    setImages(p.images?.length ? p.images : (p.image_url ? [p.image_url] : []))
     setHasVariants((p.variants?.length || 0) > 0)
     setDurations(
       p.variants?.length
@@ -157,6 +161,7 @@ export function ProductsManager() {
       short_description: form.short_description,
       category_id: form.category_id || null,
       image_url: imageUrl,
+      images,
       status: form.status,
       is_featured: form.is_featured,
       is_popular: form.is_popular,

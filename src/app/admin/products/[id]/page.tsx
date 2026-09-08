@@ -29,6 +29,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                     short_description: product.short_description || '',
                     category_id: product.category_id || '',
                     image_url: product.image_url,
+                    images: product.images || [],
                     price: String(product.variants?.length ? '' : product.price ?? ''),
                     compare_at_price: product.compare_at_price ? String(product.compare_at_price) : '',
                     status: product.status,

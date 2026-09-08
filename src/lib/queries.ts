@@ -10,6 +10,7 @@ export interface StoreProduct {
   category: { id: string; name: string; slug: string } | null
   category_id: string | null
   image_url: string | null
+  images: string[]
   price: number
   compare_at_price: number | null
   is_featured: boolean
@@ -98,6 +99,7 @@ export function toStoreProduct(p: Product, cat?: Category): StoreProduct {
     category: c ? { id: c.id, name: c.name, slug: c.slug } : null,
     category_id: p.category_id,
     image_url: p.image_url,
+    images: p.images && p.images.length ? p.images : (p.image_url ? [p.image_url] : []),
     price: p.price,
     compare_at_price: p.compare_at_price,
     is_featured: !!p.is_featured,

@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     short_description: String(body.short_description || ''),
     category_id: body.category_id || null,
     image_url: body.image_url || null,
+    images: Array.isArray(body.images) ? body.images.map(String) : (body.image_url ? [String(body.image_url)] : []),
     price: variants.length ? Math.min(...variants.map(v => v.price)) : Number(body.price),
     compare_at_price: body.compare_at_price ? Number(body.compare_at_price) : null,
     status: body.status === 'hidden' ? 'hidden' : 'active',

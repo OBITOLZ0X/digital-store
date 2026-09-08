@@ -16,6 +16,7 @@ export interface ProductFormInitial {
   short_description: string
   category_id: string
   image_url: string | null
+  images?: string[]
   price: string
   compare_at_price: string
   status: string
@@ -47,7 +48,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
     is_featured: initial?.is_featured ?? false,
     is_popular: initial?.is_popular ?? false,
   })
-  const [imageUrl, setImageUrl] = useState<string | null>(initial?.image_url || null)
+  const [images, setImages] = useState<string[]>(initial?.images || (initial?.image_url ? [initial.image_url] : []))
   const [hasVariants, setHasVariants] = useState<boolean>(initial?.has_variants ?? true)
   const [durations, setDurations] = useState<Duration[]>(
     initial?.variants?.length
@@ -69,22 +70,28 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { setMsg({ type: 'error', text: 'Please select an image file' }); return }
-    if (file.size > 5 * 1024 * 1024) { setMsg({ type: 'error', text: 'Image too large (max 5MB)' }); return }
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) { setMsg({ type: 'error', text: 'Please select image files only' }); return }
+      if (f.size > 5 * 1024 * 1024) { setMsg({ type: 'error', text: `Image ${f.name} too large (max 5MB)` }); return }
+    }
     setUploading(true); setMsg(null)
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('folder', 'products')
     try {
-      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-      setImageUrl(data.url)
+      const uploaded: string[] = []
+      for (const file of files) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('folder', 'products')
+        const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Upload failed')
+        uploaded.push(data.url)
+      }
+      setImages(prev => [...prev, ...uploaded])
     } catch (err) {
       setMsg({ type: 'error', text: 'Upload failed: ' + (err instanceof Error ? err.message : 'unknown') })
-    } finally { setUploading(false) }
+    } finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -104,7 +111,8 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
       description: form.description,
       short_description: form.short_description,
       category_id: form.category_id || null,
-      image_url: imageUrl,
+      image_url: images[0] || null,
+      images,
       status: form.status,
       is_featured: form.is_featured,
       is_popular: form.is_popular,
@@ -163,13 +171,19 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
           <div>
             <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> Product image</Label>
             <div className="mt-2 flex items-center gap-3">
-              {imageUrl && (
-                <div className="relative">
-                  <img src={imageUrl} alt="Preview" className="h-20 w-20 object-cover rounded-xl border border-zinc-700" />
-                  <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+              {images.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {images.map((src, i) => (
+                    <div key={i} className="relative">
+                      <img src={src} alt={`Image ${i + 1}`} className={`h-20 w-20 object-cover rounded-xl border ${i === 0 ? 'border-[#f5c451]' : 'border-zinc-700'}`} />
+                      {i === 0 && <span className="absolute bottom-1 left-1 text-[9px] bg-black/70 text-[#f5c451] rounded px-1">cover</span>}
+                      <button type="button" onClick={() => setImages(prev => prev.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                    </div>
+                  ))}
                 </div>
               )}
-              <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleImageUpload} ref={fileInputRef} className="mt-0 max-w-xs" />
+              <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple onChange={handleImageUpload} ref={fileInputRef} className="mt-0 max-w-xs" />
+              <p className="text-[11px] text-zinc-600">First image = cover. All images become a slider on the product page.</p>
               {uploading && <Loader2 className="h-4 w-4 animate-spin text-violet-400" />}
             </div>
           </div>
