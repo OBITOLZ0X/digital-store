@@ -152,12 +152,28 @@ export async function updateStore(mutate: (d: StoreData) => StoreData): Promise<
 // ---------- Visits ----------
 
 const VISITS_FILE = path.join(DATA_DIR, 'visits.json')
+const VISITS_KEY = 'store:visits'
 
 export async function readVisits(): Promise<VisitRecord> {
   try {
+    const kv = await getKv()
+    if (kv) {
+      const raw = await kv.get(VISITS_KEY)
+      return raw ? (JSON.parse(raw) as VisitRecord) : {}
+    }
     if (!fs.existsSync(VISITS_FILE)) return {}
     return JSON.parse(fs.readFileSync(VISITS_FILE, 'utf8')) as VisitRecord
   } catch { return {} }
+}
+
+async function writeVisits(visits: VisitRecord): Promise<void> {
+  const kv = await getKv()
+  if (kv) {
+    await kv.put(VISITS_KEY, JSON.stringify(visits))
+    return
+  }
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+  fs.writeFileSync(VISITS_FILE, JSON.stringify(visits), 'utf8')
 }
 
 export async function recordVisit(slug: string): Promise<void> {
@@ -168,9 +184,7 @@ export async function recordVisit(slug: string): Promise<void> {
     rec.total += 1
     rec.days[day] = (rec.days[day] || 0) + 1
     visits[slug] = rec
-    fs.mkdirSync(DATA_DIR, { recursive: true })
-    // fire-and-forget style write; dedupe bursts by rewriting whole file
-    fs.writeFileSync(VISITS_FILE, JSON.stringify(visits), 'utf8')
+    await writeVisits(visits)
   } catch (err) {
     console.error('[store] visit tracking failed:', err)
   }

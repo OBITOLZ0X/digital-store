@@ -11,11 +11,11 @@
   "kv_namespaces": [
     {
       "binding": "KV_BINDING",
-      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+      "id": "b113de8ac2154fcbba0e43d25c4845b7"
     }
   ],
   "vars": {
     "RUNNING_ON": "cloudflare",
-    "NEXT_PUBLIC_APP_URL": "http://localhost:3000"
+    "NEXT_PUBLIC_APP_URL": "https://digital-store.abderrezaklz1x.workers.dev"
   }
 }
