@@ -7,10 +7,12 @@ import { readStore } from '@/lib/store'
 export async function Navbar() {
   let cats: { name: string; slug: string }[] = []
   let siteName = 'DigitalStore'
+  let siteIcon: string | null = null
   try {
     const [catsRes, store] = await Promise.all([getAllCategories(), readStore()])
     cats = catsRes.slice(0, 4)
     if (store.settings?.siteName) siteName = store.settings.siteName
+    siteIcon = store.settings?.siteIcon || null
   } catch {}
 
   return (
@@ -19,7 +21,11 @@ export async function Navbar() {
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-black text-white text-sm">DS</div>
+              {siteIcon ? (
+                <img src={siteIcon} alt={siteName} className="h-8 w-8 rounded-xl object-cover" />
+              ) : (
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#f5c451] to-[#b8860b] flex items-center justify-center font-black text-black text-sm">{siteName.charAt(0).toUpperCase()}</div>
+              )}
               <span className="font-bold text-lg text-white hidden sm:block">{siteName}</span>
             </Link>
             <nav className="hidden lg:flex items-center gap-6 text-sm text-zinc-400">
@@ -48,14 +54,19 @@ export async function Navbar() {
 
 export async function Footer() {
   let siteName = 'DigitalStore'
-  try { const store = await readStore(); if (store.settings?.siteName) siteName = store.settings.siteName } catch {}
+  let siteIcon: string | null = null
+  try { const store = await readStore(); if (store.settings?.siteName) siteName = store.settings.siteName; siteIcon = store.settings?.siteIcon || null } catch {}
   return (
     <footer className="border-t border-zinc-800 bg-zinc-950 mt-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-black text-white text-sm">DS</div>
+              {siteIcon ? (
+                <img src={siteIcon} alt={siteName} className="h-8 w-8 rounded-xl object-cover" />
+              ) : (
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#f5c451] to-[#b8860b] flex items-center justify-center font-black text-black text-sm">{siteName.charAt(0).toUpperCase()}</div>
+              )}
               <span className="font-bold text-white">{siteName}</span>
             </div>
             <p className="text-zinc-500 leading-relaxed">Browse the catalog, pick your plan, and order directly through our social channels. Fast responses, no account needed.</p>

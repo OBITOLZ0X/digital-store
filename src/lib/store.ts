@@ -64,6 +64,7 @@ export interface StoreSettings {
   siteName: string
   tagline: string
   currency: string
+  siteIcon?: string | null // uploaded favicon / navbar badge image
   // --- Homepage control (admin Settings) ---
   heroBadge: string // small pill text above the title
   heroTitle: string // main headline (markdown-ish plain text)
@@ -110,6 +111,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   siteName: 'DigitalStore',
   tagline: 'Premium digital products',
   currency: 'DZD',
+  siteIcon: null,
   heroBadge: 'Order directly via WhatsApp • Telegram • No account needed',
   heroTitle: 'Premium Digital Products at the Best Prices',
   heroSubtitle: 'Subscriptions, IPTV, software licenses, game cards and gift cards. Browse, choose your plan, and message us on your favorite app — we handle the rest personally.',

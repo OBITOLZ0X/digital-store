@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label } from '@/app/components/ui/ui'
-import { Loader2, KeyRound, Globe, LayoutDashboard, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'
+import { Loader2, KeyRound, Globe, LayoutDashboard, Eye, EyeOff, ArrowUp, ArrowDown, Upload, X, ImageIcon } from 'lucide-react'
 import { apiGet, apiSend } from './api'
 
 interface SectionConfig { key: string; label: string; title: string; visible: boolean; sort: number }
@@ -23,15 +23,22 @@ export function SettingsManager() {
   const [heroMsg, setHeroMsg] = useState<string | null>(null)
   const [authMsg, setAuthMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [creds, setCreds] = useState({ current_password: '', new_email: '', new_password: '' })
+  const [iconPreview, setIconPreview] = useState<string | null>(null)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const [uploadingHero, setUploadingHero] = useState(false)
+  const iconInputRef = useRef<HTMLInputElement>(null)
+  const heroInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     Promise.all([
       apiGet<Settings>('/api/admin/settings'),
       apiGet<{ email: string; platform: string }>('/api/admin/credentials'),
-    ]).then(([s, c]) => {
+      fetch('/api/admin/site-icon').then(r => r.ok ? r.json() : { icon: null }),
+    ]).then(([s, c, ic]) => {
       setSettings(s)
       setCreds(prev => ({ ...prev, new_email: c.email || '' }))
       setPlatform(c.platform)
+      setIconPreview(ic.icon || null)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
@@ -43,6 +50,50 @@ export function SettingsManager() {
       await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency })
       setStoreMsg('Saved ✓'); setTimeout(() => setStoreMsg(null), 2500)
     } catch (err) { setStoreMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingStore(false) }
+  }
+
+  async function uploadImage(file: File, folder: string): Promise<string> {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('folder', folder)
+    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Upload failed')
+    return data.url as string
+  }
+
+  async function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { setStoreMsg('Please select an image file'); return }
+    if (file.size > 5 * 1024 * 1024) { setStoreMsg('Icon too large (max 5MB)'); return }
+    setUploadingIcon(true); setStoreMsg(null)
+    try {
+      const url = await uploadImage(file, 'branding')
+      const r = await apiSend<{ success: boolean }>('/api/admin/site-icon', 'POST', { url })
+      setIconPreview(url + (r.success ? '' : ''))
+      setStoreMsg('Icon updated ✓')
+      setTimeout(() => window.location.reload(), 800)
+    } catch (err) {
+      setStoreMsg(err instanceof Error ? err.message : 'Upload failed')
+    } finally { setUploadingIcon(false); if (iconInputRef.current) iconInputRef.current.value = '' }
+  }
+
+  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    setUploadingHero(true); setHeroMsg(null)
+    try {
+      const uploaded: string[] = []
+      for (const f of files) {
+        if (!f.type.startsWith('image/')) throw new Error('Image files only')
+        if (f.size > 5 * 1024 * 1024) throw new Error(`${f.name} too large (max 5MB)`)
+        uploaded.push(await uploadImage(f, 'hero'))
+      }
+      setSettings(s => ({ ...s!, heroImages: [...s!.heroImages, ...uploaded] }))
+    } catch (err) {
+      setHeroMsg(err instanceof Error ? err.message : 'Upload failed')
+    } finally { setUploadingHero(false); if (heroInputRef.current) heroInputRef.current.value = '' }
   }
 
   async function saveHero(e: React.FormEvent) {
@@ -107,6 +158,28 @@ export function SettingsManager() {
               <Label>Tagline</Label>
               <Input value={settings.tagline} onChange={e => setSettings(s => ({ ...s!, tagline: e.target.value }))} className="mt-1.5" />
             </div>
+            <div>
+              <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Site icon (favicon + navbar logo letter)</Label>
+              <div className="mt-2 flex items-center gap-3">
+                {iconPreview ? (
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={iconPreview} alt="Site icon" className="h-14 w-14 rounded-xl object-cover border border-white/10" />
+                    <button type="button" onClick={async () => { await apiSend('/api/admin/site-icon', 'POST', { url: null }); setIconPreview(null); setTimeout(() => window.location.reload(), 500) }}
+                      className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                  </div>
+                ) : (
+                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#f5c451] to-[#b8860b] flex items-center justify-center font-black text-black text-lg">
+                    {(settings.siteName || 'S').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <Input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon" onChange={handleIconUpload} ref={iconInputRef} className="mt-0 max-w-xs" />
+                  <p className="text-[11px] text-zinc-600 mt-1">Square image recommended (e.g. 256×256). Shown in the browser tab and as the navbar badge. Empty = first letter of the store name.</p>
+                </div>
+                {uploadingIcon && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={savingStore}>{savingStore && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Save</Button>
               {storeMsg && <span className="text-sm text-emerald-400">{storeMsg}</span>}
@@ -141,14 +214,26 @@ export function SettingsManager() {
                 <Input value={settings.heroCtaText} onChange={e => setSettings(s => ({ ...s!, heroCtaText: e.target.value }))} className="mt-1.5" />
               </div>
               <div>
-                <Label>Hero backdrop images (one URL per line)</Label>
-                <textarea
-                  value={settings.heroImages.join('\n')}
-                  onChange={e => setSettings(s => ({ ...s!, heroImages: e.target.value.split('\n').map(x => x.trim()).filter(Boolean) }))}
-                  rows={3}
-                  placeholder="https://…/backdrop1.jpg&#10;https://…/backdrop2.jpg"
-                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#22d3ee] font-mono" />
-                <p className="text-[11px] text-zinc-600 mt-1">Netflix-style slideshow behind the hero. Empty = uses featured product covers.</p>
+                <Label>Hero backdrop images</Label>
+                <div className="mt-1.5 space-y-2">
+                  {settings.heroImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {settings.heroImages.map((src, i) => (
+                        <div key={i} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt={`Backdrop ${i + 1}`} className="h-16 w-24 object-cover rounded-lg border border-white/10" />
+                          <button type="button" onClick={() => setSettings(s => ({ ...s!, heroImages: s!.heroImages.filter((_, j) => j !== i) }))}
+                            className="absolute -top-1.5 -right-1.5 bg-zinc-800 rounded-full p-0.5 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleHeroUpload} ref={heroInputRef} className="mt-0 max-w-xs" />
+                    {uploadingHero && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
+                  </div>
+                  <p className="text-[11px] text-zinc-600">Netflix-style slideshow behind the hero. Upload from your device — first image shows first. Empty = uses featured product covers.</p>
+                </div>
               </div>
             </div>
 
