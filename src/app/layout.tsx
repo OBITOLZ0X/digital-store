@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: "DigitalStore — Premium Digital Products", template: "%s | DigitalStore" },
     description: "Premium digital products — subscriptions, IPTV, software keys, gift cards. Browse prices and order directly via WhatsApp or Telegram. No account needed.",
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-    icons: siteIcon ? { icon: siteIcon, apple: siteIcon } : undefined,
+    icons: siteIcon ? { icon: siteIcon, apple: siteIcon } : { icon: '/favicon.ico', apple: '/icon-512.png' },
   };
 }
 
