@@ -53,7 +53,6 @@ export function ProductsManager() {
   const [editing, setEditing] = useState<Product | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [hasVariants, setHasVariants] = useState(true)
@@ -61,6 +60,7 @@ export function ProductsManager() {
     { key: Math.random().toString(36).slice(2, 8), name: '1 Month', duration_days: '30', price: '', compare_at_price: '' },
   ])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
@@ -84,7 +84,6 @@ export function ProductsManager() {
 
   function resetForm() {
     setForm({ ...EMPTY_FORM })
-    setImageUrl(null)
     setImages([])
     setHasVariants(true)
     setDurations([{ key: Math.random().toString(36).slice(2, 8), name: '1 Month', duration_days: '30', price: '', compare_at_price: '' }])
@@ -111,7 +110,6 @@ export function ProductsManager() {
       is_featured: !!p.is_featured,
       is_popular: !!p.is_popular,
     })
-    setImageUrl(p.image_url)
     setImages(p.images?.length ? p.images : (p.image_url ? [p.image_url] : []))
     setHasVariants((p.variants?.length || 0) > 0)
     setDurations(
@@ -125,22 +123,28 @@ export function ProductsManager() {
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { setMsg({ type: 'error', text: 'Please select an image file' }); return }
-    if (file.size > 5 * 1024 * 1024) { setMsg({ type: 'error', text: 'Image too large (max 5MB)' }); return }
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) { setMsg({ type: 'error', text: 'Please select image files only' }); return }
+      if (f.size > 5 * 1024 * 1024) { setMsg({ type: 'error', text: `${f.name} is too large (max 5MB)` }); return }
+    }
     setUploading(true); setMsg(null)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('folder', 'products')
-      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-      setImageUrl(data.url)
+      const uploaded: string[] = []
+      for (const file of files) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('folder', 'products')
+        const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Upload failed')
+        uploaded.push(data.url)
+      }
+      setImages(prev => [...prev, ...uploaded])
     } catch (err) {
       setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Upload failed' })
-    } finally { setUploading(false) }
+    } finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -160,7 +164,7 @@ export function ProductsManager() {
       description: form.description,
       short_description: form.short_description,
       category_id: form.category_id || null,
-      image_url: imageUrl,
+      image_url: images[0] || null,
       images,
       status: form.status,
       is_featured: form.is_featured,
@@ -207,7 +211,7 @@ export function ProductsManager() {
 
       {showForm && (
         <div ref={formRef}>
-        <Card className="border-[#f5c451]/40">
+        <Card className="border-[#f5c451]/40 bg-[#111]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-white">{editing ? 'Edit Product' : 'New Product'}</h3>
@@ -236,21 +240,29 @@ export function ProductsManager() {
                 <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} placeholder="Everything the buyer should know about this product…" className="mt-1.5" />
               </div>
               <div>
-                <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> Product image</Label>
-                <div className="mt-2 flex items-center gap-3">
-                  {imageUrl && (
-                    <div className="relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imageUrl} alt="Preview" className="h-20 w-20 object-cover rounded-xl border border-white/10" />
-                      <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> Product images</Label>
+                <div className="mt-2 space-y-2">
+                  {images.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {images.map((src, i) => (
+                        <div key={i} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt={`Image ${i + 1}`} className={`h-20 w-20 object-cover rounded-xl border ${i === 0 ? 'border-[#f5c451]' : 'border-white/10'}`} />
+                          {i === 0 && <span className="absolute bottom-1 left-1 text-[9px] bg-black/70 text-[#f5c451] rounded px-1">cover</span>}
+                          <button type="button" onClick={() => setImages(prev => prev.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleImageUpload} className="mt-0 max-w-xs" />
-                  {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
+                  <div className="flex items-center gap-2">
+                    <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple onChange={handleImageUpload} ref={fileInputRef} className="mt-0 max-w-xs" />
+                    {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
+                  </div>
+                  <p className="text-[11px] text-zinc-600">Select multiple images at once (Ctrl+click). First image = cover shown on the homepage; all images become a slider on the product page.</p>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-white/5">
+              <div className="pt-3 border-t border-white/10">
                 <div className="flex items-center justify-between mb-3">
                   <Label className="mb-0">Periods &amp; prices</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setHasVariants(v => !v)}>
@@ -298,7 +310,7 @@ export function ProductsManager() {
                 )}
               </div>
 
-              <div className="pt-3 border-t border-white/5">
+              <div className="pt-3 border-t border-white/10">
                 <Label className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> Order channels for this product</Label>
                 <p className="text-xs text-zinc-500 mt-1 mb-2">Buyers see buttons for the selected channels on this product&apos;s page. Manage channels in the <b className="text-zinc-400">Contact</b> section.</p>
                 {channels.length === 0 && (
@@ -311,7 +323,7 @@ export function ProductsManager() {
                     const on = selectedChannels.includes(c.id)
                     return (
                       <button key={c.id} type="button" onClick={() => setSelectedChannels(p => p.includes(c.id) ? p.filter(x => x !== c.id) : [...p, c.id])}
-                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-[#f5c451] bg-[#f5c451] text-black/20 text-white' : 'border-white/5 bg-[#111] text-zinc-400 hover:text-white'}`}>
+                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-[#f5c451] bg-[#f5c451]/15 text-white' : 'border-white/10 bg-[#111] text-zinc-400 hover:text-white'}`}>
                         {on ? '✓ ' : ''}{c.label}
                       </button>
                     )
@@ -319,7 +331,7 @@ export function ProductsManager() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-white/5 grid sm:grid-cols-2 gap-4">
+              <div className="pt-3 border-t border-white/10 grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Status</Label>
                   <Select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="mt-1.5">
@@ -329,11 +341,11 @@ export function ProductsManager() {
                 </div>
                 <div className="flex items-center gap-6 pt-6">
                   <Label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
+                    <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#111] text-[#f5c451] focus:ring-[#22d3ee]" />
                     <span className="text-sm">Featured on home</span>
                   </Label>
                   <Label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
+                    <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#111] text-[#f5c451] focus:ring-[#22d3ee]" />
                     <span className="text-sm">Popular</span>
                   </Label>
                 </div>
@@ -365,7 +377,7 @@ export function ProductsManager() {
                 <th className="text-right p-3 font-medium text-zinc-300">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-white/5">
               {products.length === 0 && (
                 <tr><td colSpan={6} className="p-8 text-center text-zinc-500">No products yet. Click &quot;Add Product&quot; to create one.</td></tr>
               )}
