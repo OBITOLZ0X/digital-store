@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/ui'
 import { getStoreProducts, getAllCategories } from '@/lib/queries'
 import { readStore } from '@/lib/store'
 import { ImageSlider } from '@/app/components/products/image-slider'
+import { HeroTrending } from '@/app/components/products/hero-trending'
 import { MessageCircle, Shield, Clock, Star, Zap } from 'lucide-react'
 import Link from 'next/link'
 
@@ -35,6 +36,18 @@ export default async function HomePage() {
     : [...featured, ...newProducts].slice(0, 5).map((p: any) => p.image_url).filter(Boolean)
 
   const ordered = [...(s.sections || [])].sort((a, b) => a.sort - b.sort)
+
+  // top-5 most-visited products for the hero trending slider
+  let visits: Record<string, { total: number }> = {}
+  try {
+    const { readVisits } = await import('@/lib/store')
+    visits = await readVisits()
+  } catch {}
+  const trending = [...store.products]
+    .filter(p => p.status === 'active')
+    .map(p => ({ id: p.id, name: p.name, slug: p.slug, image_url: p.image_url, views: visits[p.slug]?.total || 0 }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5)
 
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     categories: () => categories.length > 0 ? (
@@ -108,7 +121,8 @@ export default async function HomePage() {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_left,_rgba(245,196,81,0.10),transparent_55%)]" />
           </>
         )}
-        <div className={`relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${heroImages.length ? 'py-24 lg:py-40' : 'py-16 lg:py-24'}`}>
+        <div className={`relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${heroImages.length ? 'py-24 lg:py-36' : 'py-16 lg:py-24'}`}>
+          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-12 items-center">
           <div className="max-w-2xl">
             {s.heroBadge && (
               <div className="inline-flex items-center gap-2 rounded-full border border-[#22d3ee]/30 bg-[#22d3ee]/10 px-3 py-1 text-xs text-[#22d3ee] mb-6 backdrop-blur">
@@ -130,6 +144,8 @@ export default async function HomePage() {
               <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> Fast Replies</div>
               <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
             </div>
+          </div>
+          <HeroTrending products={trending} />
           </div>
         </div>
       </section>
