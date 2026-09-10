@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <CardContent className="p-5">
                 <h3 className="font-semibold text-white flex items-center gap-2 mb-1"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> How to buy this product</h3>
                 <p className="text-sm text-zinc-400 mb-4">Pick a duration above, then message us on any channel below — tell us the product and period, and we&apos;ll confirm your order in the chat.</p>
-                <ContactButtons channels={chosen.map(c => ({ id: c.id, label: c.label, type: c.type, url: c.url || contactHref(c.type, c.value), color: c.color }))} productName={p.name} />
+                <ContactButtons channels={chosen.map(c => ({ id: c.id, label: c.label, type: c.type, url: c.url || contactHref(c.type, c.value), color: c.color }))} productName={p.name} variants={variants.map(v => ({ id: v.id, name: v.name, price: Number(v.price), duration_days: v.duration_days ?? null }))} />
                 {chosen.length === 0 && <p className="text-sm text-amber-400">Contact channels are being set up — check back soon.</p>}
               </CardContent>
             </Card>

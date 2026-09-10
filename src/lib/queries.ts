@@ -17,6 +17,7 @@ export interface StoreProduct {
   is_popular: boolean
   tags: string[]
   variants: { id: string; name: string; duration_days: number | null; price: number; compare_at_price?: number | null }[]
+  contact_channels: string[]
   created_at: string
 }
 
@@ -106,6 +107,7 @@ export function toStoreProduct(p: Product, cat?: Category): StoreProduct {
     is_popular: !!p.is_popular,
     tags: p.tags || [],
     variants: p.variants || [],
+    contact_channels: p.contact_channels || [],
     created_at: p.created_at,
   }
 }
