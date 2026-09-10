@@ -166,7 +166,7 @@ export function SettingsManager() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={iconPreview} alt="Site icon" className="h-14 w-14 rounded-xl object-cover border border-white/10" />
                     <button type="button" onClick={async () => { await apiSend('/api/admin/site-icon', 'POST', { url: null }); setIconPreview(null); setTimeout(() => window.location.reload(), 500) }}
-                      className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
                   </div>
                 ) : (
                   <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#f5c451] to-[#b8860b] flex items-center justify-center font-black text-black text-lg">
@@ -223,7 +223,7 @@ export function SettingsManager() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={src} alt={`Backdrop ${i + 1}`} className="h-16 w-24 object-cover rounded-lg border border-white/10" />
                           <button type="button" onClick={() => setSettings(s => ({ ...s!, heroImages: s!.heroImages.filter((_, j) => j !== i) }))}
-                            className="absolute -top-1.5 -right-1.5 bg-zinc-800 rounded-full p-0.5 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                            className="absolute -top-1.5 -right-1.5 bg-[#161616] rounded-full p-0.5 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
                         </div>
                       ))}
                     </div>

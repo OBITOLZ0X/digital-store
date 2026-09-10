@@ -36,7 +36,7 @@ export function ImageSlider({
   }, [autoMs, safe.length])
 
   return (
-    <div className={`group/slider relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${aspect} ${className}`}>
+    <div className={`group/slider relative overflow-hidden rounded-2xl border border-white/5 bg-[#111] ${aspect} ${className}`}>
       {safe.map((src, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img

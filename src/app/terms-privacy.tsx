@@ -34,8 +34,8 @@ export function PrivacyPage(){
 
 function Legal({ title, children }:{ title:string; children:React.ReactNode }){
   return (
-    <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-12 text-sm text-zinc-400 leading-relaxed [&_h3]:text-white [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_a]:text-violet-400">
-      <Link href="/" className="text-violet-400 hover:text-violet-300 text-sm">← Back to store</Link>
+    <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-12 text-sm text-zinc-400 leading-relaxed [&_h3]:text-white [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_a]:text-[#22d3ee]">
+      <Link href="/" className="text-[#22d3ee] hover:text-[#22d3ee] text-sm">← Back to store</Link>
       <h1 className="text-3xl font-black text-white mt-4 mb-4">{title}</h1>
       {children}
     </div>

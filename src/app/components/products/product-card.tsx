@@ -14,7 +14,7 @@ export function ProductCard({ product, currency = 'DZD' }: { product: Record<str
   const multi = variants.length > 1
   return (
     <Card className="group overflow-hidden hover:border-[#f5c451]/40 transition-all duration-300 hover:shadow-[0_0_35px_rgba(245,196,81,0.12)] flex flex-col bg-[#111] border-white/5">
-      <Link href={`/products/${product.slug}`} className="relative aspect-[4/3] overflow-hidden bg-zinc-800 block">
+      <Link href={`/products/${product.slug}`} className="relative aspect-[4/3] overflow-hidden bg-[#161616] block">
         <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {discount > 0 && <Badge variant="destructive">-{discount}%</Badge>}
@@ -62,7 +62,7 @@ export function ProductGrid({ products, currency = 'DZD' }: { products: (Record<
 export function CategoryCard({ cat, previewImages = [] }: { cat: { id:string; name:string; slug:string; image_url:string|null; description:string|null }; previewImages?: string[] }){
   return (
     <Link href={`/categories/${cat.slug}`} className="group relative block overflow-hidden rounded-2xl border border-white/5 bg-[#111] hover:border-[#22d3ee]/40 transition">
-      <div className="relative aspect-[4/3] overflow-hidden bg-zinc-800">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#161616]">
         {previewImages.length > 1 ? (
           <ImageSlider images={previewImages} alt={cat.name} autoMs={3000} showDots={false} aspect="!absolute" className="!rounded-none !border-0 h-full" />
         ) : (

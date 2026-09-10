@@ -28,8 +28,8 @@ export { Button }
 
 export function Badge({className, variant='default', ...props}: React.HTMLAttributes<HTMLDivElement> & {variant?:'default'|'secondary'|'destructive'|'outline'|'success'|'warning'}){
   const v: Record<string,string> = {
-    default:"bg-violet-600 text-white", secondary:"bg-zinc-800 text-zinc-300",
-    destructive:"bg-red-600 text-white", outline:"border border-zinc-700 text-zinc-400",
+    default:"bg-[#f5c451] text-black text-white", secondary:"bg-[#161616] text-zinc-300",
+    destructive:"bg-red-600 text-white", outline:"border border-white/10 text-zinc-400",
     success:"bg-emerald-600 text-white", warning:"bg-amber-500 text-black",
   }
   return <div className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", v[variant], className)} {...props} />
@@ -53,14 +53,14 @@ export function CardFooter({className,...props}: React.HTMLAttributes<HTMLDivEle
   return <div className={cn("flex items-center p-6 pt-0", className)} {...props} />
 }
 export function Input({className, type, ...props}: React.InputHTMLAttributes<HTMLInputElement>){
-  return <input type={type} className={cn("flex h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50 text-white", className)} {...props} />
+  return <input type={type} className={cn("flex h-10 w-full rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#22d3ee] focus:border-transparent disabled:opacity-50 text-white", className)} {...props} />
 }
 export function Label({className, ...props}: React.LabelHTMLAttributes<HTMLLabelElement>){
   return <label className={cn("text-sm font-medium leading-none text-zinc-300 peer-disabled:opacity-70", className)} {...props} />
 }
 export function Textarea({className, ...props}: React.TextareaHTMLAttributes<HTMLTextAreaElement>){
-  return <textarea className={cn("flex min-h-[80px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-white", className)} {...props} />
+  return <textarea className={cn("flex min-h-[80px] w-full rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#22d3ee] text-white", className)} {...props} />
 }
 export function Select({className, children, ...props}: React.SelectHTMLAttributes<HTMLSelectElement>){
-  return <select className={cn("flex h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-white", className)} {...props}>{children}</select>
+  return <select className={cn("flex h-10 w-full rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#22d3ee] text-white", className)} {...props}>{children}</select>
 }

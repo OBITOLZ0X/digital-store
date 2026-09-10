@@ -24,7 +24,7 @@ export function ContactButtons({ channels, productName }:{ channels:{ id:string;
           ? `${c.url}?text=${msg}`
           : c.url
         return (
-          <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
+          <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#111] p-3">
             <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: (c.color||'#7c3aed')+'22', color: c.color||'#a78bfa' }}>
               <Icon className="h-5 w-5" />
             </div>
@@ -35,7 +35,7 @@ export function ContactButtons({ channels, productName }:{ channels:{ id:string;
             <button
               type="button"
               onClick={() => copy(c.id, c.url)}
-              className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition"
+              className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-[#161616] transition"
               title="Copy link"
             >
               {copied===c.id ? <Check className="h-4 w-4 text-emerald-400"/> : <Copy className="h-4 w-4"/>}

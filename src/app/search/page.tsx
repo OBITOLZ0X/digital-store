@@ -17,9 +17,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-white">Search {q && <>for <span className="text-violet-400">&ldquo;{q}&rdquo;</span></>}</h1>
+        <h1 className="text-2xl font-bold text-white">Search {q && <>for <span className="text-[#22d3ee]">&ldquo;{q}&rdquo;</span></>}</h1>
         <p className="text-sm text-zinc-500 mt-1">{res.total} results</p>
-        {!q && <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500">Type something to search products.</div>}
+        {!q && <div className="mt-8 rounded-2xl border border-white/5 bg-[#111] p-8 text-center text-zinc-500">Type something to search products.</div>}
         {q && <div className="mt-6"><ProductGrid products={res.products as never} currency={currency} /></div>}
         {q && res.products.length===0 && <div className="mt-8 text-center text-zinc-500">No results for &ldquo;{q}&rdquo;. Try different keywords.</div>}
       </div>

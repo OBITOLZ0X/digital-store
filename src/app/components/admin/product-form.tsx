@@ -144,7 +144,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
     <form onSubmit={handleSubmit} className="space-y-5">
       {msg && <div className={`rounded-xl p-3 border text-sm ${msg.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>{msg.text}</div>}
 
-      <Card className="border-zinc-700">
+      <Card className="border-white/10">
         <CardHeader><CardTitle>Product info</CardTitle></CardHeader>
         <CardContent className="p-6 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
@@ -175,23 +175,23 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
                 <div className="flex flex-wrap gap-2">
                   {images.map((src, i) => (
                     <div key={i} className="relative">
-                      <img src={src} alt={`Image ${i + 1}`} className={`h-20 w-20 object-cover rounded-xl border ${i === 0 ? 'border-[#f5c451]' : 'border-zinc-700'}`} />
+                      <img src={src} alt={`Image ${i + 1}`} className={`h-20 w-20 object-cover rounded-xl border ${i === 0 ? 'border-[#f5c451]' : 'border-white/10'}`} />
                       {i === 0 && <span className="absolute bottom-1 left-1 text-[9px] bg-black/70 text-[#f5c451] rounded px-1">cover</span>}
-                      <button type="button" onClick={() => setImages(prev => prev.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => setImages(prev => prev.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
                     </div>
                   ))}
                 </div>
               )}
               <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple onChange={handleImageUpload} ref={fileInputRef} className="mt-0 max-w-xs" />
               <p className="text-[11px] text-zinc-600">First image = cover. All images become a slider on the product page.</p>
-              {uploading && <Loader2 className="h-4 w-4 animate-spin text-violet-400" />}
+              {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-700">
-        <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4 text-violet-400" /> Periods &amp; prices</CardTitle></CardHeader>
+      <Card className="border-white/10">
+        <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#22d3ee]" /> Periods &amp; prices</CardTitle></CardHeader>
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-zinc-500">Each period shows as a price row on the product landing page.</p>
@@ -242,8 +242,8 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-700">
-        <CardHeader><CardTitle className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-violet-400" /> Order channels for this product</CardTitle></CardHeader>
+      <Card className="border-white/10">
+        <CardHeader><CardTitle className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> Order channels for this product</CardTitle></CardHeader>
         <CardContent className="p-6 space-y-3">
           <p className="text-xs text-zinc-500">Buyers see buttons for the selected channels on this product&apos;s page. Manage the list in <b className="text-zinc-400">Contact</b>.</p>
           {channels.length === 0 && (
@@ -256,7 +256,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
               const on = selectedChannels.includes(c.id)
               return (
                 <button key={c.id} type="button" onClick={() => toggleChannel(c.id)}
-                  className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-violet-500 bg-violet-600/20 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'}`}>
+                  className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-[#f5c451] bg-[#f5c451] text-black/20 text-white' : 'border-white/5 bg-[#111] text-zinc-400 hover:text-white'}`}>
                   {on ? '✓ ' : ''}{c.label}
                 </button>
               )
@@ -266,7 +266,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-700">
+      <Card className="border-white/10">
         <CardHeader><CardTitle>Visibility</CardTitle></CardHeader>
         <CardContent className="p-6 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
@@ -279,11 +279,11 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
             </div>
             <div className="flex items-center gap-6 pt-6">
               <Label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-violet-500 focus:ring-violet-500" />
+                <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
                 <span className="text-sm">Featured on home</span>
               </Label>
               <Label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-violet-500 focus:ring-violet-500" />
+                <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
                 <span className="text-sm">Popular</span>
               </Label>
             </div>

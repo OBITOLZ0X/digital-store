@@ -20,7 +20,7 @@ export default async function ContactPage(){
             const Icon = ICONS[c.type] || Globe
             const url = c.url || contactHref(c.type, c.value)
             return (
-              <div key={c.id} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 flex items-center gap-4">
+              <div key={c.id} className="rounded-2xl border border-white/5 bg-[#111] p-5 flex items-center gap-4">
                 <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: (c.color||'#7c3aed')+'22', color: c.color||'#a78bfa' }}>
                   <Icon className="h-6 w-6" />
                 </div>

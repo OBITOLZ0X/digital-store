@@ -82,7 +82,7 @@ export function CategoryManager() {
     catch (err) { setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Delete failed' }) }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-violet-400" /></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#22d3ee]" /></div>
 
   return (
     <div className="space-y-4">
@@ -96,7 +96,7 @@ export function CategoryManager() {
       )}
 
       {showForm && (
-        <Card className="border-zinc-700">
+        <Card className="border-white/10">
           <CardHeader><CardTitle>{editing ? 'Edit Category' : 'New Category'}</CardTitle></CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,12 +119,12 @@ export function CategoryManager() {
                 <div className="mt-2 space-y-2">
                   {imageUrl && (
                     <div className="relative inline-block">
-                      <img src={imageUrl} alt="Preview" className="h-24 w-24 object-cover rounded-lg border border-zinc-700" />
-                      <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      <img src={imageUrl} alt="Preview" className="h-24 w-24 object-cover rounded-lg border border-white/10" />
+                      <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
                     </div>
                   )}
                   <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} className="mt-1.5" />
-                  {uploading && <Loader2 className="h-4 w-4 animate-spin text-violet-400" />}
+                  {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
@@ -138,12 +138,12 @@ export function CategoryManager() {
         </Card>
       )}
 
-      <Card className="border-zinc-700">
+      <Card className="border-white/10">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-zinc-900/50 border-b border-zinc-800">
+                <tr className="bg-white/[0.03] border-b border-white/5">
                   <th className="p-3 text-left font-medium text-zinc-300">Image</th>
                   <th className="p-3 text-left font-medium text-zinc-300">Name</th>
                   <th className="p-3 text-left font-medium text-zinc-300">Slug</th>
@@ -155,11 +155,11 @@ export function CategoryManager() {
                 {categories.length === 0 ? (
                   <tr><td colSpan={5} className="p-8 text-center text-zinc-500">No categories yet. Click &quot;Add Category&quot; to create one.</td></tr>
                 ) : categories.map(cat => (
-                  <tr key={cat.id} className="hover:bg-zinc-900/30">
+                  <tr key={cat.id} className="hover:bg-white/[0.02]">
                     <td className="p-3">
                       {cat.image_url
-                        ? <img src={cat.image_url} alt="" className="h-14 w-14 object-cover rounded-lg border border-zinc-700" />
-                        : <div className="h-14 w-14 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700"><Image className="h-6 w-6 text-zinc-500" /></div>}
+                        ? <img src={cat.image_url} alt="" className="h-14 w-14 object-cover rounded-lg border border-white/10" />
+                        : <div className="h-14 w-14 rounded-lg bg-[#161616] flex items-center justify-center border border-white/10"><Image className="h-6 w-6 text-zinc-500" /></div>}
                     </td>
                     <td className="p-3 font-medium text-white">{cat.name}</td>
                     <td className="p-3 text-zinc-400 font-mono text-xs">{cat.slug}</td>

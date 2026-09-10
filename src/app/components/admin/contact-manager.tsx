@@ -69,7 +69,7 @@ export function ContactManager() {
     catch (err) { setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Delete failed' }) }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-violet-400" /></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#22d3ee]" /></div>
 
   const info = typeInfo(form.type)
 
@@ -85,7 +85,7 @@ export function ContactManager() {
       )}
 
       {showForm && (
-        <Card className="border-zinc-700">
+        <Card className="border-white/10">
           <CardHeader><CardTitle>{editing ? 'Edit Channel' : 'New Channel'}</CardTitle></CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +109,7 @@ export function ContactManager() {
               <div>
                 <Label>Color</Label>
                 <div className="flex items-center gap-3 mt-1.5">
-                  <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-10 w-14 rounded-lg bg-zinc-900 border border-zinc-700 cursor-pointer" />
+                  <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-10 w-14 rounded-lg bg-[#111] border border-white/10 cursor-pointer" />
                   <span className="text-xs text-zinc-500 font-mono">{form.color}</span>
                 </div>
               </div>
@@ -126,14 +126,14 @@ export function ContactManager() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {channels.length === 0 && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center text-zinc-500 sm:col-span-2 lg:col-span-3">
+          <div className="rounded-2xl border border-white/5 bg-[#111] p-8 text-center text-zinc-500 sm:col-span-2 lg:col-span-3">
             No channels yet. Add WhatsApp, Telegram or any channel buyers will use to order.
           </div>
         )}
         {channels.map(c => {
           const Icon = typeInfo(c.type).icon
           return (
-            <div key={c.id} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 flex items-start gap-4">
+            <div key={c.id} className="rounded-2xl border border-white/5 bg-[#111] p-5 flex items-start gap-4">
               <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: (c.color || '#7c3aed') + '22', color: c.color || '#a78bfa' }}>
                 <Icon className="h-5 w-5" />
               </div>

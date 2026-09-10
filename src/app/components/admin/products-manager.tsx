@@ -191,7 +191,7 @@ export function ProductsManager() {
     catch (err) { setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Delete failed' }) }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-violet-400" /></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#22d3ee]" /></div>
 
   return (
     <div className="space-y-4">
@@ -207,7 +207,7 @@ export function ProductsManager() {
 
       {showForm && (
         <div ref={formRef}>
-        <Card className="border-violet-600/40">
+        <Card className="border-[#f5c451]/40">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-white">{editing ? 'Edit Product' : 'New Product'}</h3>
@@ -241,16 +241,16 @@ export function ProductsManager() {
                   {imageUrl && (
                     <div className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imageUrl} alt="Preview" className="h-20 w-20 object-cover rounded-xl border border-zinc-700" />
-                      <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      <img src={imageUrl} alt="Preview" className="h-20 w-20 object-cover rounded-xl border border-white/10" />
+                      <button type="button" onClick={() => setImageUrl(null)} className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
                     </div>
                   )}
                   <Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleImageUpload} className="mt-0 max-w-xs" />
-                  {uploading && <Loader2 className="h-4 w-4 animate-spin text-violet-400" />}
+                  {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800">
+              <div className="pt-3 border-t border-white/5">
                 <div className="flex items-center justify-between mb-3">
                   <Label className="mb-0">Periods &amp; prices</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setHasVariants(v => !v)}>
@@ -298,8 +298,8 @@ export function ProductsManager() {
                 )}
               </div>
 
-              <div className="pt-3 border-t border-zinc-800">
-                <Label className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-violet-400" /> Order channels for this product</Label>
+              <div className="pt-3 border-t border-white/5">
+                <Label className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> Order channels for this product</Label>
                 <p className="text-xs text-zinc-500 mt-1 mb-2">Buyers see buttons for the selected channels on this product&apos;s page. Manage channels in the <b className="text-zinc-400">Contact</b> section.</p>
                 {channels.length === 0 && (
                   <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-300">
@@ -311,7 +311,7 @@ export function ProductsManager() {
                     const on = selectedChannels.includes(c.id)
                     return (
                       <button key={c.id} type="button" onClick={() => setSelectedChannels(p => p.includes(c.id) ? p.filter(x => x !== c.id) : [...p, c.id])}
-                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-violet-500 bg-violet-600/20 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'}`}>
+                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${on ? 'border-[#f5c451] bg-[#f5c451] text-black/20 text-white' : 'border-white/5 bg-[#111] text-zinc-400 hover:text-white'}`}>
                         {on ? '✓ ' : ''}{c.label}
                       </button>
                     )
@@ -319,7 +319,7 @@ export function ProductsManager() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800 grid sm:grid-cols-2 gap-4">
+              <div className="pt-3 border-t border-white/5 grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Status</Label>
                   <Select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="mt-1.5">
@@ -329,11 +329,11 @@ export function ProductsManager() {
                 </div>
                 <div className="flex items-center gap-6 pt-6">
                   <Label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-violet-500 focus:ring-violet-500" />
+                    <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
                     <span className="text-sm">Featured on home</span>
                   </Label>
                   <Label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-violet-500 focus:ring-violet-500" />
+                    <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))} className="h-4 w-4 rounded border-white/15 bg-[#161616] text-[#f5c451] focus:ring-[#22d3ee]" />
                     <span className="text-sm">Popular</span>
                   </Label>
                 </div>
@@ -352,10 +352,10 @@ export function ProductsManager() {
         </div>
       )}
 
-      <Card className="border-zinc-700">
+      <Card className="border-white/10">
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-xs text-zinc-500 border-b border-zinc-800 bg-zinc-900/50">
+            <thead className="text-xs text-zinc-500 border-b border-white/5 bg-white/[0.03]">
               <tr>
                 <th className="text-left p-3 font-medium text-zinc-300">Image</th>
                 <th className="text-left font-medium text-zinc-300">Name</th>
@@ -370,11 +370,11 @@ export function ProductsManager() {
                 <tr><td colSpan={6} className="p-8 text-center text-zinc-500">No products yet. Click &quot;Add Product&quot; to create one.</td></tr>
               )}
               {products.map(p => (
-                <tr key={p.id} className="hover:bg-zinc-900/30">
+                <tr key={p.id} className="hover:bg-white/[0.02]">
                   <td className="p-3">
                     {p.image_url
-                      ? <img src={p.image_url} alt="" className="h-12 w-12 object-cover rounded-lg border border-zinc-700" />
-                      : <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700"><Package className="h-5 w-5 text-zinc-500" /></div>}
+                      ? <img src={p.image_url} alt="" className="h-12 w-12 object-cover rounded-lg border border-white/10" />
+                      : <div className="h-12 w-12 rounded-lg bg-[#161616] flex items-center justify-center border border-white/10"><Package className="h-5 w-5 text-zinc-500" /></div>}
                   </td>
                   <td className="p-3">
                     <div className="font-medium text-white">{p.name}</div>
@@ -385,7 +385,7 @@ export function ProductsManager() {
                     {p.variants?.length ? (
                       <div className="space-y-0.5">
                         {p.variants.map((v, i) => (
-                          <div key={i} className="text-xs text-zinc-300">{v.name} — <span className="text-violet-300 font-medium">{Number(v.price).toLocaleString('en-US')}</span></div>
+                          <div key={i} className="text-xs text-zinc-300">{v.name} — <span className="text-[#22d3ee] font-medium">{Number(v.price).toLocaleString('en-US')}</span></div>
                         ))}
                       </div>
                     ) : (
