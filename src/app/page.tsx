@@ -45,7 +45,7 @@ export default async function HomePage() {
   } catch {}
   const trending = [...store.products]
     .filter(p => p.status === 'active')
-    .map(p => ({ id: p.id, name: p.name, slug: p.slug, image_url: p.image_url, views: visits[p.slug]?.total || 0 }))
+    .map(p => ({ id: p.id, name: p.name, slug: p.slug, image_url: p.image_url, views: visits[p.slug]?.total || 0, price: p.price }))
     .sort((a, b) => b.views - a.views)
     .slice(0, 5)
 
@@ -145,7 +145,7 @@ export default async function HomePage() {
               <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
             </div>
           </div>
-          <HeroTrending products={trending} />
+          <div className="group"><HeroTrending products={trending} currency={currency} /></div>
           </div>
         </div>
       </section>
