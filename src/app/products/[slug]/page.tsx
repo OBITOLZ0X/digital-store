@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { MessageCircle, Shield, Clock } from 'lucide-react'
 import { ImageSlider } from '@/app/components/products/image-slider'
 import { ProductPurchase } from './product-purchase'
+import { TutorialVideo } from './tutorial-video'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             <ImageSlider images={gallery} alt={p.name} autoMs={4000} className="group" />
+            {p.tutorial_url ? <TutorialVideo url={p.tutorial_url} /> : null}
             {/* Landing-style benefits */}
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
               <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><MessageCircle className="h-5 w-5 mx-auto text-[#22d3ee] mb-1"/> Order via chat</div>

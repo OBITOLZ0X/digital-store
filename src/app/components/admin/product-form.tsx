@@ -14,6 +14,7 @@ export interface ProductFormInitial {
   name: string
   description: string
   short_description: string
+  tutorial_url?: string | null
   category_id: string
   image_url: string | null
   images?: string[]
@@ -41,6 +42,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
     name: initial?.name || '',
     short_description: initial?.short_description || '',
     description: initial?.description || '',
+    tutorial_url: (initial as any)?.tutorial_url || '',
     category_id: initial?.category_id || '',
     price: initial?.price ?? '',
     compare_at_price: initial?.compare_at_price ?? '',
@@ -110,6 +112,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
       name: form.name,
       description: form.description,
       short_description: form.short_description,
+      tutorial_url: form.tutorial_url || undefined,
       category_id: form.category_id || null,
       image_url: images[0] || null,
       images,
@@ -167,6 +170,11 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
           <div>
             <Label>Full description</Label>
             <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} placeholder="Everything the buyer should know about this product…" className="mt-1.5" />
+          </div>
+          <div>
+            <Label>Tutorial video (YouTube link)</Label>
+            <Input value={form.tutorial_url} onChange={e => setForm(f => ({ ...f, tutorial_url: e.target.value }))} placeholder="https://www.youtube.com/watch?v=..." className="mt-1.5" />
+            <p className="text-[11px] text-zinc-600 mt-1">Only YouTube links are accepted. It appears as a video player under the slider on the product page. Leave empty for none.</p>
           </div>
           <div>
             <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> Product image</Label>

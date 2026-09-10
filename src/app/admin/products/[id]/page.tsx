@@ -27,6 +27,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                     name: product.name,
                     description: product.description || '',
                     short_description: product.short_description || '',
+                    tutorial_url: product.tutorial_url || null,
                     category_id: product.category_id || '',
                     image_url: product.image_url,
                     images: product.images || [],

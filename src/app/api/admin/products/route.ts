@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/auth'
 import { readStore, writeStore, slugify, generateId, type Product, type ProductVariant } from '@/lib/store'
+import { normalizeYouTubeUrl } from '@/lib/youtube'
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -37,6 +38,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Price is required' }, { status: 400 })
   }
 
+  const tutorialRaw = String(body.tutorial_url || '').trim()
+  if (tutorialRaw && !normalizeYouTubeUrl(tutorialRaw)) {
+    return NextResponse.json({ error: 'Tutorial link must be a valid YouTube video URL (e.g. https://www.youtube.com/watch?v=... or https://youtu.be/...)' }, { status: 400 })
+  }
+
   const store = await readStore()
   const now = new Date().toISOString()
   const product: Product = {
@@ -55,6 +61,7 @@ export async function POST(req: NextRequest) {
     is_popular: !!body.is_popular,
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
     contact_channels: Array.isArray(body.contact_channels) ? body.contact_channels.map(String) : [],
+    tutorial_url: normalizeYouTubeUrl(tutorialRaw) || null,
     terms: body.terms ? String(body.terms) : undefined,
     variants,
     created_at: now,

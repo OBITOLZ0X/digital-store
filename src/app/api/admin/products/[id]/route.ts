@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/auth'
 import { readStore, writeStore, generateId, type ProductVariant } from '@/lib/store'
+import { normalizeYouTubeUrl } from '@/lib/youtube'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -36,6 +37,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.tags !== undefined) p.tags = Array.isArray(body.tags) ? body.tags.map(String) : []
   if (body.contact_channels !== undefined) p.contact_channels = Array.isArray(body.contact_channels) ? body.contact_channels.map(String) : []
   if (body.terms !== undefined) p.terms = body.terms ? String(body.terms) : undefined
+  if (body.tutorial_url !== undefined) {
+    const t = String(body.tutorial_url || '').trim()
+    if (t) {
+      const norm = normalizeYouTubeUrl(t)
+      if (!norm) return NextResponse.json({ error: 'Tutorial link must be a valid YouTube video URL (e.g. https://www.youtube.com/watch?v=... or https://youtu.be/...)' }, { status: 400 })
+      p.tutorial_url = norm
+    } else {
+      p.tutorial_url = null
+    }
+  }
   if (body.compare_at_price !== undefined) p.compare_at_price = body.compare_at_price ? Number(body.compare_at_price) : null
 
   // Variants are replaced wholesale (durations edited as a list in the form)

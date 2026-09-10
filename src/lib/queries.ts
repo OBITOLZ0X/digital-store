@@ -18,6 +18,7 @@ export interface StoreProduct {
   tags: string[]
   variants: { id: string; name: string; duration_days: number | null; price: number; compare_at_price?: number | null }[]
   contact_channels: string[]
+  tutorial_url: string | null
   created_at: string
 }
 
@@ -108,6 +109,7 @@ export function toStoreProduct(p: Product, cat?: Category): StoreProduct {
     tags: p.tags || [],
     variants: p.variants || [],
     contact_channels: p.contact_channels || [],
+    tutorial_url: p.tutorial_url || null,
     created_at: p.created_at,
   }
 }

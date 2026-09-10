@@ -35,6 +35,7 @@ export interface Product {
   is_popular: boolean
   tags: string[]
   contact_channels: string[] // ids of ContactChannel
+  tutorial_url?: string | null // YouTube tutorial video (canonical watch url)
   terms?: string
   variants: ProductVariant[]
   created_at: string
