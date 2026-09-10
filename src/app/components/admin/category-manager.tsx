@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button, Input, Label, Textarea, Card, CardHeader, CardTitle, CardContent, Badge } from '@/app/components/ui/ui'
+import { Button, Input, Label, Textarea, Card, CardContent, Badge } from '@/app/components/ui/ui'
 import { Plus, Image, Trash2, Edit, Loader2, X } from 'lucide-react'
 import { apiGet, apiSend } from './api'
 
@@ -88,7 +88,7 @@ export function CategoryManager() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-400">{categories.length} categor{categories.length === 1 ? 'y' : 'ies'}</p>
-        <Button onClick={() => { resetForm(); setShowForm(true) }}><Plus className="h-4 w-4 mr-2" /> Add Category</Button>
+        {!showForm && <Button onClick={() => { resetForm(); setShowForm(true) }}><Plus className="h-4 w-4 mr-2" /> Add Category</Button>}
       </div>
 
       {msg && (
@@ -96,9 +96,12 @@ export function CategoryManager() {
       )}
 
       {showForm && (
-        <Card className="border-white/10">
-          <CardHeader><CardTitle>{editing ? 'Edit Category' : 'New Category'}</CardTitle></CardHeader>
+        <Card className="border-[#f5c451]/40 bg-[#111]">
           <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-white">{editing ? 'Edit Category' : 'New Category'}</h3>
+              <Button variant="ghost" size="icon" onClick={() => { setShowForm(false); resetForm() }} className="text-zinc-400 hover:text-white"><X className="h-4 w-4" /></Button>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>

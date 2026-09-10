@@ -6,7 +6,12 @@ import { normalizeYouTubeUrl } from '@/lib/youtube'
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const store = await readStore()
-  return NextResponse.json(store.products)
+  // join category so the admin table can show the category name
+  const enriched = store.products.map(p => {
+    const c = p.category_id ? store.categories.find(cat => cat.id === p.category_id) : null
+    return { ...p, category: c ? { id: c.id, name: c.name, slug: c.slug } : null }
+  })
+  return NextResponse.json(enriched)
 }
 
 function normalizeVariants(raw: unknown, isMulti: boolean): ProductVariant[] {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Input, Label, Select, Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/ui'
+import { Button, Input, Label, Select, Card, CardContent } from '@/app/components/ui/ui'
 import { Plus, Trash2, Edit, Loader2, X, MessageCircle, Send, Mail, AtSign, Share2, Globe } from 'lucide-react'
 import { apiGet, apiSend } from './api'
 
@@ -77,7 +77,7 @@ export function ContactManager() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-400">These channels appear as buy buttons on product pages and on the Contact page.</p>
-        <Button onClick={() => { resetForm(); setShowForm(true) }}><Plus className="h-4 w-4 mr-2" /> Add Channel</Button>
+        {!showForm && <Button onClick={() => { resetForm(); setShowForm(true) }}><Plus className="h-4 w-4 mr-2" /> Add Channel</Button>}
       </div>
 
       {msg && (
@@ -85,9 +85,12 @@ export function ContactManager() {
       )}
 
       {showForm && (
-        <Card className="border-white/10">
-          <CardHeader><CardTitle>{editing ? 'Edit Channel' : 'New Channel'}</CardTitle></CardHeader>
+        <Card className="border-[#f5c451]/40 bg-[#111]">
           <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-white">{editing ? 'Edit Channel' : 'New Channel'}</h3>
+              <Button variant="ghost" size="icon" onClick={() => { setShowForm(false); resetForm() }} className="text-zinc-400 hover:text-white"><X className="h-4 w-4" /></Button>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
