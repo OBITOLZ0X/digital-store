@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 /**
  * Cinematic product gallery slider — frameless image, gradient fade at bottom,
  * arrows appear on hover, gold progress dots. Same style as the hero slider.
+ * Manual navigation (arrows/dots) resets the auto-advance timer.
  */
 export function ImageSlider({
   images,
@@ -23,19 +24,23 @@ export function ImageSlider({
 }) {
   const safe = images.length ? images : ['']
   const [index, setIndex] = useState(0)
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [tick, setTick] = useState(0) // bumped on manual nav → restarts the interval
 
-  const go = useCallback((i: number) => setIndex(((i % safe.length) + safe.length) % safe.length), [safe.length])
+  const go = useCallback((i: number) => {
+    setIndex(((i % safe.length) + safe.length) % safe.length)
+    setTick(t => t + 1) // reset the auto-advance countdown
+  }, [safe.length])
 
   useEffect(() => {
     if (index >= safe.length) setIndex(0)
   }, [safe.length, index])
 
+  // auto-advance: re-created whenever `tick` changes, so manual nav resets the timer
   useEffect(() => {
     if (!autoMs || safe.length < 2) return
-    timer.current = setInterval(() => setIndex(i => (i + 1) % safe.length), autoMs)
-    return () => { if (timer.current) clearInterval(timer.current) }
-  }, [autoMs, safe.length])
+    const t = setInterval(() => setIndex(i => (i + 1) % safe.length), autoMs)
+    return () => clearInterval(t)
+  }, [autoMs, safe.length, tick])
 
   return (
     <div className={`group/slider relative overflow-hidden rounded-2xl ${aspect} ${className}`}>

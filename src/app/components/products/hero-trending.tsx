@@ -21,13 +21,20 @@ interface CurrencyProp { currency?: string }
 export function HeroTrending({ products, currency = 'DZD' }: { products: HeroProduct[] } & CurrencyProp) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [tick, setTick] = useState(0) // bumped on manual nav -> restarts the interval
   const count = products.length
+
+  // manual nav: change slide AND reset the auto-advance countdown
+  function go(i: number) {
+    setIndex(((i % count) + count) % count)
+    setTick(t => t + 1)
+  }
 
   useEffect(() => {
     if (count < 2 || paused) return
     const t = setInterval(() => setIndex(i => (i + 1) % count), 4500)
     return () => clearInterval(t)
-  }, [count, paused])
+  }, [count, paused, tick])
 
   if (count === 0) return null
 
@@ -68,14 +75,14 @@ export function HeroTrending({ products, currency = 'DZD' }: { products: HeroPro
       {count > 1 && (
         <>
           <button
-            onClick={() => setIndex(i => (i - 1 + count) % count)}
+            onClick={() => go(index - 1)}
             aria-label="Previous"
             className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100 [div:hover>&]:opacity-100"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
-            onClick={() => setIndex(i => (i + 1) % count)}
+            onClick={() => go(index + 1)}
             aria-label="Next"
             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 [div:hover>&]:opacity-100"
           >
@@ -90,7 +97,7 @@ export function HeroTrending({ products, currency = 'DZD' }: { products: HeroPro
           {products.map((_, i) => (
             <button
               key={i}
-              onClick={() => setIndex(i)}
+              onClick={() => go(i)}
               aria-label={`Slide ${i + 1}`}
               className={`h-1.5 rounded-full transition-all ${i === index ? 'w-6 bg-[#f5c451]' : 'w-1.5 bg-white/25 hover:bg-white/50'}`}
             />
