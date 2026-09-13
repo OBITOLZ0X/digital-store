@@ -25,7 +25,8 @@ export interface Product {
   name: string
   description: string
   short_description: string
-  category_id: string | null
+  category_id: string | null // primary category (= category_ids[0])
+  category_ids: string[] // every category this product belongs to
   image_url: string | null
   images: string[] // gallery for the product page slider (first = cover)
   price: number // effective display price (min of variants when multi)
@@ -168,6 +169,17 @@ async function kvPutStore(data: StoreData): Promise<boolean> {
   return true
 }
 
+function migrateProduct(p: Product): Product {
+  if (!Array.isArray(p.category_ids)) {
+    p.category_ids = p.category_id ? [p.category_id] : []
+  }
+  if (p.category_id && !p.category_ids.includes(p.category_id)) {
+    p.category_ids = [p.category_id, ...p.category_ids]
+  }
+  if (!p.category_id && p.category_ids.length) p.category_id = p.category_ids[0]
+  return p
+}
+
 function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings {
   const merged = { ...DEFAULT_SETTINGS, ...(s || {}) }
   if (!Array.isArray(merged.sections) || merged.sections.length === 0) merged.sections = DEFAULT_SECTIONS
@@ -191,13 +203,13 @@ function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings
 export async function readStore(): Promise<StoreData> {
   try {
     const fromKv = await kvGetStore()
-    if (fromKv) return { ...DEFAULT_DATA, ...fromKv, settings: normalizeSettings(fromKv.settings) }
+    if (fromKv) return { ...DEFAULT_DATA, ...fromKv, products: (fromKv.products || []).map(migrateProduct), settings: normalizeSettings(fromKv.settings) }
   } catch { /* fall through to fs */ }
   try {
     if (!fs.existsSync(DATA_FILE)) return { ...DEFAULT_DATA, settings: normalizeSettings(DEFAULT_DATA.settings) }
     const raw = fs.readFileSync(DATA_FILE, 'utf8')
     const parsed = JSON.parse(raw) as StoreData
-    return { ...DEFAULT_DATA, ...parsed, settings: normalizeSettings(parsed.settings) }
+    return { ...DEFAULT_DATA, ...parsed, products: (parsed.products || []).map(migrateProduct), settings: normalizeSettings(parsed.settings) }
   } catch (err) {
     console.error('[store] failed to read data file:', err)
     return { ...DEFAULT_DATA, settings: normalizeSettings(DEFAULT_DATA.settings) }

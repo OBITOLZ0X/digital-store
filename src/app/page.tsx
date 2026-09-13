@@ -27,7 +27,7 @@ export default async function HomePage() {
   const allActive = store.products.filter(p => p.status === 'active')
   const categories = [...store.categories].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map(c => ({
     ...c,
-    products: allActive.filter(p => p.category_id === c.id).slice(0, 6).map(p => ({ image_url: p.image_url, images: p.images || [] })),
+    products: allActive.filter(p => (p.category_ids?.length ? p.category_ids.includes(c.id) : p.category_id === c.id)).slice(0, 6).map(p => ({ image_url: p.image_url, images: p.images || [] })),
   }))
 
   // hero backdrop: admin-curated images, else featured product covers (Netflix-style)

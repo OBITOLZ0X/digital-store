@@ -25,7 +25,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.name !== undefined) p.name = String(body.name).trim() || p.name
   if (body.description !== undefined) p.description = String(body.description)
   if (body.short_description !== undefined) p.short_description = String(body.short_description)
-  if (body.category_id !== undefined) p.category_id = body.category_id || null
+  if (body.category_ids !== undefined) {
+    p.category_ids = Array.isArray(body.category_ids) ? body.category_ids.map(String) : []
+    p.category_id = p.category_ids[0] || null
+  } else if (body.category_id !== undefined) {
+    p.category_id = body.category_id || null
+    p.category_ids = p.category_id ? [p.category_id] : []
+  }
   if (body.image_url !== undefined) p.image_url = body.image_url || null
   if (body.images !== undefined) {
     p.images = Array.isArray(body.images) ? body.images.map(String) : []

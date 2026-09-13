@@ -8,8 +8,9 @@ export async function GET(req: NextRequest) {
   const store = await readStore()
   // join category so the admin table can show the category name
   const enriched = store.products.map(p => {
-    const c = p.category_id ? store.categories.find(cat => cat.id === p.category_id) : null
-    return { ...p, category: c ? { id: c.id, name: c.name, slug: c.slug } : null }
+    const ids = (p.category_ids?.length ? p.category_ids : (p.category_id ? [p.category_id] : []))
+    const cats = ids.map(id => store.categories.find(c => c.id === id)).filter(Boolean) as { id: string; name: string; slug: string }[]
+    return { ...p, category: cats[0] || null, categories: cats.map(c => ({ id: c.id, name: c.name, slug: c.slug })) }
   })
   return NextResponse.json(enriched)
 }
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
     name,
     description: String(body.description || ''),
     short_description: String(body.short_description || ''),
-    category_id: body.category_id || null,
+    category_id: (Array.isArray(body.category_ids) && body.category_ids.length ? String(body.category_ids[0]) : (body.category_id || null)),
+    category_ids: Array.isArray(body.category_ids) ? body.category_ids.map(String) : (body.category_id ? [String(body.category_id)] : []),
     image_url: body.image_url || null,
     images: Array.isArray(body.images) ? body.images.map(String) : (body.image_url ? [String(body.image_url)] : []),
     price: variants.length ? Math.min(...variants.map(v => v.price)) : Number(body.price),

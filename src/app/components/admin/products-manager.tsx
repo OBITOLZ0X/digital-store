@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button, Badge, Card, CardContent, Input, Label, Select, Textarea } from '@/app/components/ui/ui'
 import { Package, Loader2, Plus, Pencil, Trash2, Eye, MessageCircle, X, Upload } from 'lucide-react'
 import { apiGet, apiSend } from './api'
+import { CategoryPicker } from './category-picker'
 
 interface Cat { id: string; name: string; slug: string }
 interface Channel { id: string; label: string; type: string; value: string; color: string }
@@ -24,6 +25,8 @@ interface Product {
   short_description?: string
   tutorial_url?: string | null
   category_id?: string | null
+  category_ids?: string[]
+  categories?: { id: string; name: string; slug: string }[]
   variants: { id?: string; name: string; price: number; duration_days: number | null; compare_at_price?: number | null }[]
   contact_channels: string[]
   category: { id: string; name: string; slug: string } | null
@@ -34,7 +37,6 @@ const EMPTY_FORM = {
   short_description: '',
   description: '',
   tutorial_url: '',
-  category_id: '',
   price: '',
   compare_at_price: '',
   status: 'active',
@@ -55,6 +57,7 @@ export function ProductsManager() {
   const [editing, setEditing] = useState<Product | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM })
+  const [selectedCats, setSelectedCats] = useState<string[]>([])
   const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [hasVariants, setHasVariants] = useState(true)
@@ -86,6 +89,7 @@ export function ProductsManager() {
 
   function resetForm() {
     setForm({ ...EMPTY_FORM })
+    setSelectedCats([])
     setImages([])
     setHasVariants(true)
     setDurations([{ key: Math.random().toString(36).slice(2, 8), name: '1 Month', duration_days: '30', price: '', compare_at_price: '' }])
@@ -106,13 +110,13 @@ export function ProductsManager() {
       short_description: p.short_description || '',
       description: p.description || '',
       tutorial_url: p.tutorial_url || '',
-      category_id: p.category_id || '',
       price: p.variants?.length ? '' : String(p.price ?? ''),
       compare_at_price: '',
       status: p.status,
       is_featured: !!p.is_featured,
       is_popular: !!p.is_popular,
     })
+    setSelectedCats(p.category_ids?.length ? p.category_ids : (p.category_id ? [p.category_id] : []))
     setImages(p.images?.length ? p.images : (p.image_url ? [p.image_url] : []))
     setHasVariants((p.variants?.length || 0) > 0)
     setDurations(
@@ -167,7 +171,7 @@ export function ProductsManager() {
       description: form.description,
       short_description: form.short_description,
       tutorial_url: form.tutorial_url || undefined,
-      category_id: form.category_id || null,
+      category_ids: selectedCats,
       image_url: images[0] || null,
       images,
       status: form.status,
@@ -228,11 +232,10 @@ export function ProductsManager() {
                   <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Netflix Premium" required className="mt-1.5" />
                 </div>
                 <div>
-                  <Label>Category</Label>
-                  <Select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="mt-1.5">
-                    <option value="">No category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </Select>
+                  <Label>Categories</Label>
+                  <div className="mt-1.5">
+                    <CategoryPicker categories={categories} selected={selectedCats} onChange={setSelectedCats} />
+                  </div>
                 </div>
               </div>
               <div>
@@ -401,7 +404,14 @@ export function ProductsManager() {
                     <div className="font-medium text-white">{p.name}</div>
                     <div className="text-[11px] text-zinc-600">/products/{p.slug}</div>
                   </td>
-                  <td className="p-3 text-zinc-400">{p.category?.name || '—'}</td>
+                  <td className="p-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(p.categories?.length ? p.categories : (p.category ? [p.category] : [])).map((c, i) => (
+                        <span key={c.id} className={`text-[10px] px-1.5 py-0.5 rounded-md border ${i === 0 ? 'border-[#f5c451]/40 bg-[#f5c451]/10 text-[#f5c451]' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>{c.name}</span>
+                      ))}
+                      {(!p.categories?.length && !p.category) && <span className="text-zinc-600">—</span>}
+                    </div>
+                  </td>
                   <td className="p-3">
                     {p.variants?.length ? (
                       <div className="space-y-0.5">

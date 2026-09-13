@@ -15,6 +15,7 @@ export interface ProductFormInitial {
   description: string
   short_description: string
   tutorial_url?: string | null
+  category_ids?: string[]
   category_id: string
   image_url: string | null
   images?: string[]
@@ -38,12 +39,14 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
   const [categories, setCategories] = useState<Cat[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
 
+  const [selectedCats, setSelectedCats] = useState<string[]>(
+    (initial as any)?.category_ids?.length ? (initial as any).category_ids : (initial?.category_id ? [initial.category_id] : [])
+  )
   const [form, setForm] = useState({
     name: initial?.name || '',
     short_description: initial?.short_description || '',
     description: initial?.description || '',
     tutorial_url: (initial as any)?.tutorial_url || '',
-    category_id: initial?.category_id || '',
     price: initial?.price ?? '',
     compare_at_price: initial?.compare_at_price ?? '',
     status: initial?.status || 'active',
@@ -113,7 +116,7 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
       description: form.description,
       short_description: form.short_description,
       tutorial_url: form.tutorial_url || undefined,
-      category_id: form.category_id || null,
+      category_ids: selectedCats,
       image_url: images[0] || null,
       images,
       status: form.status,
@@ -156,11 +159,10 @@ export function ProductForm({ mode, initial }: { mode: 'new' | 'edit'; initial?:
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Netflix Premium" required className="mt-1.5" />
             </div>
             <div>
-              <Label>Category</Label>
-              <Select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="mt-1.5">
-                <option value="">No category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </Select>
+              <Label>Categories</Label>
+              <div className="mt-1.5">
+                <CategoryPicker categories={categories} selected={selectedCats} onChange={setSelectedCats} />
+              </div>
             </div>
           </div>
           <div>
