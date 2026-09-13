@@ -64,7 +64,7 @@ export function CategoryCard({ cat, previewImages = [] }: { cat: { id:string; na
     <Link href={`/categories/${cat.slug}`} className="group relative block overflow-hidden rounded-2xl border border-white/5 bg-[#111] hover:border-[#22d3ee]/40 transition">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#161616]">
         {previewImages.length > 1 ? (
-          <ImageSlider images={previewImages} alt={cat.name} autoMs={3000} showDots={false} aspect="!absolute" className="!rounded-none !border-0 h-full" />
+          <ImageSlider images={previewImages} alt={cat.name} autoMs={3000} showDots={false} fill className="!rounded-none" />
         ) : (
           <img
             src={previewImages[0] || cat.image_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop'}

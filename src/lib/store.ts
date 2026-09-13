@@ -72,6 +72,9 @@ export interface StoreSettings {
   heroSubtitle: string // paragraph under the title
   heroCtaText: string // primary button label
   heroImages: string[] // Netflix-style backdrop images (cycled as slider)
+  heroTrending: boolean // show the trending-products slider in the hero
+  heroTrendingDesktop: boolean
+  heroTrendingMobile: boolean
   sections: SectionConfig[] // ordered, toggleable homepage sections
 }
 
@@ -79,7 +82,9 @@ export interface SectionConfig {
   key: string // 'categories' | 'featured' | 'popular' | 'newest' | 'howitworks'
   label: string // admin-facing label
   title: string // section heading shown to visitors
-  visible: boolean
+  visible: boolean // master switch
+  show_desktop: boolean // render on md+ screens
+  show_mobile: boolean // render on small screens
   sort: number
 }
 
@@ -101,11 +106,11 @@ const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'store.data.json')
 
 export const DEFAULT_SECTIONS: SectionConfig[] = [
-  { key: 'categories', label: 'Categories', title: 'Browse Categories', visible: true, sort: 1 },
-  { key: 'featured', label: 'Featured', title: 'Featured', visible: true, sort: 2 },
-  { key: 'popular', label: 'Popular', title: 'Popular', visible: true, sort: 3 },
-  { key: 'newest', label: 'New Arrivals', title: 'New Arrivals', visible: true, sort: 4 },
-  { key: 'howitworks', label: 'How it works', title: 'How it works', visible: true, sort: 5 },
+  { key: 'categories', label: 'Categories', title: 'Browse Categories', visible: true, show_desktop: true, show_mobile: true, sort: 1 },
+  { key: 'featured', label: 'Featured', title: 'Featured', visible: true, show_desktop: true, show_mobile: true, sort: 2 },
+  { key: 'popular', label: 'Popular', title: 'Popular', visible: true, show_desktop: true, show_mobile: true, sort: 3 },
+  { key: 'newest', label: 'New Arrivals', title: 'New Arrivals', visible: true, show_desktop: true, show_mobile: true, sort: 4 },
+  { key: 'howitworks', label: 'How it works', title: 'How it works', visible: true, show_desktop: true, show_mobile: true, sort: 5 },
 ]
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -118,6 +123,9 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   heroSubtitle: 'Subscriptions, IPTV, software licenses, game cards and gift cards. Browse, choose your plan, and message us on your favorite app — we handle the rest personally.',
   heroCtaText: 'Explore Products',
   heroImages: [],
+  heroTrending: true,
+  heroTrendingDesktop: true,
+  heroTrendingMobile: true,
   sections: DEFAULT_SECTIONS,
 }
 
@@ -162,7 +170,17 @@ function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings
   if (!Array.isArray(merged.heroImages)) merged.heroImages = []
   // keep section list in sync with defaults (new keys get added, removed keys dropped)
   const byKey = new Map(merged.sections.map(x => [x.key, x]))
-  merged.sections = DEFAULT_SECTIONS.map(def => ({ ...def, ...(byKey.get(def.key) || {}) })).sort((a, b) => a.sort - b.sort)
+  merged.sections = DEFAULT_SECTIONS.map(def => {
+    const inc = byKey.get(def.key) || {}
+    return {
+      ...def, ...inc,
+      show_desktop: inc.show_desktop ?? def.show_desktop,
+      show_mobile: inc.show_mobile ?? def.show_mobile,
+    }
+  }).sort((a, b) => a.sort - b.sort)
+  if (typeof (merged as any).heroTrending !== 'boolean') (merged as any).heroTrending = true
+  if (typeof (merged as any).heroTrendingDesktop !== 'boolean') (merged as any).heroTrendingDesktop = true
+  if (typeof (merged as any).heroTrendingMobile !== 'boolean') (merged as any).heroTrendingMobile = true
   return merged
 }
 

@@ -2,16 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label } from '@/app/components/ui/ui'
-import { Loader2, KeyRound, Globe, LayoutDashboard, Eye, EyeOff, ArrowUp, ArrowDown, Upload, X, ImageIcon } from 'lucide-react'
+import { Loader2, KeyRound, Globe, LayoutDashboard, Eye, EyeOff, ArrowUp, ArrowDown, Upload, X, ImageIcon, Monitor, Smartphone } from 'lucide-react'
 import { apiGet, apiSend } from './api'
 
-interface SectionConfig { key: string; label: string; title: string; visible: boolean; sort: number }
+interface SectionConfig { key: string; label: string; title: string; visible: boolean; show_desktop: boolean; show_mobile: boolean; sort: number }
 interface Settings {
   siteName: string; tagline: string; currency: string
   heroBadge: string; heroTitle: string; heroSubtitle: string; heroCtaText: string
   heroImages: string[]
+  heroTrending: boolean
+  heroTrendingDesktop: boolean
+  heroTrendingMobile: boolean
   sections: SectionConfig[]
 }
+
+const stOnCls = () => 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+const stOffCls = () => 'border-white/10 bg-transparent text-zinc-500'
+const stOn = (b: boolean | undefined) => b !== false
 
 export function SettingsManager() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -105,6 +112,9 @@ export function SettingsManager() {
         heroSubtitle: settings!.heroSubtitle,
         heroCtaText: settings!.heroCtaText,
         heroImages: settings!.heroImages,
+        heroTrending: settings!.heroTrending,
+        heroTrendingDesktop: settings!.heroTrendingDesktop,
+        heroTrendingMobile: settings!.heroTrendingMobile,
         sections: settings!.sections,
       })
       setHeroMsg('Saved ✓'); setTimeout(() => setHeroMsg(null), 2500)
@@ -238,18 +248,50 @@ export function SettingsManager() {
             </div>
 
             <div className="pt-3 border-t border-white/10">
-              <Label className="mb-2 block">Homepage sections — visibility, title &amp; order</Label>
+              <Label className="mb-2 block">Trending slider (hero right side — most visited products)</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => setSettings(st => ({ ...st!, heroTrending: !st!.heroTrending }))}
+                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${stOn(settings.heroTrending) ? stOnCls() : stOffCls()}`}>
+                  {settings.heroTrending ? '✓ Shown' : 'Hidden'} — master
+                </button>
+                <span className="text-zinc-600 text-xs">on</span>
+                <button type="button" disabled={!settings.heroTrending} onClick={() => setSettings(st => ({ ...st!, heroTrendingDesktop: !st!.heroTrendingDesktop }))}
+                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingDesktop) ? stOnCls() : stOffCls()}`}>
+                  <Monitor className="inline h-3.5 w-3.5 mr-1" />PC {settings.heroTrendingDesktop ? '✓' : '✗'}
+                </button>
+                <button type="button" disabled={!settings.heroTrending} onClick={() => setSettings(st => ({ ...st!, heroTrendingMobile: !st!.heroTrendingMobile }))}
+                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingMobile) ? stOnCls() : stOffCls()}`}>
+                  <Smartphone className="inline h-3.5 w-3.5 mr-1" />Phone {settings.heroTrendingMobile ? '✓' : '✗'}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-white/10">
+              <Label className="mb-1 block">Homepage sections — visibility, title &amp; order</Label>
+              <p className="text-[11px] text-zinc-600 mb-2">PC = medium+ screens, Phone = small screens. Hide a section everywhere with the master Shown/Hidden.</p>
               <div className="space-y-2">
                 {orderedSections.map((sec, i) => (
                   <div key={sec.key} className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-2.5">
                     <Button type="button" variant="ghost" size="icon" onClick={() => moveSection(sec.key, -1)} disabled={i === 0} className="h-7 w-7 text-zinc-500 hover:text-white"><ArrowUp className="h-3.5 w-3.5" /></Button>
                     <Button type="button" variant="ghost" size="icon" onClick={() => moveSection(sec.key, 1)} disabled={i === orderedSections.length - 1} className="h-7 w-7 text-zinc-500 hover:text-white"><ArrowDown className="h-3.5 w-3.5" /></Button>
                     <span className="text-xs text-zinc-500 w-24 shrink-0">{sec.label}</span>
-                    <Input value={sec.title} onChange={e => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, title: e.target.value } : x) }))} className="flex-1 h-8 text-xs" placeholder="Section title" />
-                    <button type="button" onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, visible: !x.visible } : x) }))}
-                      className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium border transition ${sec.visible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
-                      {sec.visible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
-                    </button>
+                    <Input value={sec.title} onChange={e => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, title: e.target.value } : x) }))} className="flex-1 h-8 text-xs min-w-24" placeholder="Section title" />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button type="button" disabled={!sec.visible} onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, show_desktop: !x.show_desktop } : x) }))}
+                        className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_desktop ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
+                        title="Show on PC">
+                        <Monitor className="inline h-3 w-3" />
+                      </button>
+                      <button type="button" disabled={!sec.visible} onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, show_mobile: !x.show_mobile } : x) }))}
+                        className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_mobile ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
+                        title="Show on Phone">
+                        <Smartphone className="inline h-3 w-3" />
+                      </button>
+                      <button type="button" onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, visible: !x.visible } : x) }))}
+                        className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium border transition ${sec.visible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
+                        {sec.visible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

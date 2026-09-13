@@ -14,6 +14,7 @@ export function ImageSlider({
   aspect = 'aspect-[4/3]',
   autoMs = 0, // 0 = manual only; >0 = auto-advance interval
   showDots = true,
+  fill = false, // when true, fills the positioned parent (absolute inset-0)
 }: {
   images: string[]
   alt: string
@@ -21,6 +22,7 @@ export function ImageSlider({
   aspect?: string
   autoMs?: number
   showDots?: boolean
+  fill?: boolean
 }) {
   const safe = images.length ? images : ['']
   const [index, setIndex] = useState(0)
@@ -43,7 +45,7 @@ export function ImageSlider({
   }, [autoMs, safe.length, tick])
 
   return (
-    <div className={`group/slider relative overflow-hidden rounded-2xl ${aspect} ${className}`}>
+    <div className={`group/slider overflow-hidden rounded-2xl ${fill ? 'absolute inset-0' : `relative ${aspect}`} ${className}`}>
       {safe.map((src, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img

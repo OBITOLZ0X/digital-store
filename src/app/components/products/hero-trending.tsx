@@ -40,7 +40,7 @@ export function HeroTrending({ products, currency = 'DZD' }: { products: HeroPro
 
   return (
     <div
-      className="relative w-full max-w-[340px] mx-auto lg:mx-0 lg:justify-self-end"
+      className="relative w-full max-w-[230px] sm:max-w-[280px] mx-auto lg:mx-0 lg:max-w-[340px] lg:justify-self-end"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

@@ -49,6 +49,13 @@ export default async function HomePage() {
     .sort((a, b) => b.views - a.views)
     .slice(0, 5)
 
+  // per-device visibility helper
+  const deviceClass = (d: boolean, m: boolean) =>
+    d && m ? '' : d ? 'hidden md:block' : m ? 'md:hidden' : 'hidden'
+
+  // hero trending slider visibility (master + per device)
+  const heroSliderClass = s.heroTrending === false ? 'hidden' : deviceClass(s.heroTrendingDesktop !== false, s.heroTrendingMobile !== false)
+
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     categories: () => categories.length > 0 ? (
       <section key="categories" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-14">
@@ -121,37 +128,47 @@ export default async function HomePage() {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_left,_rgba(245,196,81,0.10),transparent_55%)]" />
           </>
         )}
-        <div className={`relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${heroImages.length ? 'py-24 lg:py-36' : 'py-16 lg:py-24'}`}>
-          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-12 items-center">
-          <div className="max-w-2xl">
-            {s.heroBadge && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#22d3ee]/30 bg-[#22d3ee]/10 px-3 py-1 text-xs text-[#22d3ee] mb-6 backdrop-blur">
-                <MessageCircle className="h-3 w-3" /> {s.heroBadge}
+        <div className={`relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${heroImages.length ? 'py-16 sm:py-24 lg:py-36' : 'py-12 sm:py-16 lg:py-24'}`}>
+          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-12 items-center">
+            <div className="max-w-2xl">
+              {s.heroBadge && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#22d3ee]/30 bg-[#22d3ee]/10 px-3 py-1 text-xs text-[#22d3ee] mb-5 sm:mb-6 backdrop-blur">
+                  <MessageCircle className="h-3 w-3" /> {s.heroBadge}
+                </div>
+              )}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]">
+                {s.heroTitle.split('|').map((part, i) => (
+                  <span key={i} className={i % 2 === 1 ? 'bg-gradient-to-r from-[#f5c451] to-[#fbbf24] bg-clip-text text-transparent' : ''}>{part.trim()}{i < s.heroTitle.split('|').length - 1 ? ' ' : ''}</span>
+                ))}
+              </h1>
+              <p className="mt-4 sm:mt-5 text-base sm:text-lg text-zinc-300/90 leading-relaxed">{s.heroSubtitle}</p>
+              <div className="mt-6 sm:mt-8 flex flex-wrap gap-3">
+                <Link href="/shop"><Button size="lg" className="rounded-full px-8 bg-[#f5c451] text-black hover:bg-[#ffd76e] shadow-[0_0_30px_rgba(245,196,81,0.35)] border-0">{s.heroCtaText || 'Explore Products'}</Button></Link>
+                <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">Contact Us</Button></Link>
+              </div>
+              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
+                <div className="flex items-center gap-2 text-zinc-300"><Shield className="h-4 w-4 text-[#f5c451]"/> Trusted Seller</div>
+                <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> Fast Replies</div>
+                <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
+              </div>
+            </div>
+            {trending.length > 0 && (
+              <div className={heroSliderClass}>
+                <div className="group"><HeroTrending products={trending} currency={currency} /></div>
               </div>
             )}
-            <h1 className="text-4xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]">
-              {s.heroTitle.split('|').map((part, i) => (
-                <span key={i} className={i % 2 === 1 ? 'bg-gradient-to-r from-[#f5c451] to-[#fbbf24] bg-clip-text text-transparent' : ''}>{part.trim()}{i < s.heroTitle.split('|').length - 1 ? ' ' : ''}</span>
-              ))}
-            </h1>
-            <p className="mt-5 text-lg text-zinc-300/90 leading-relaxed">{s.heroSubtitle}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/shop"><Button size="lg" className="rounded-full px-8 bg-[#f5c451] text-black hover:bg-[#ffd76e] shadow-[0_0_30px_rgba(245,196,81,0.35)] border-0">{s.heroCtaText || 'Explore Products'}</Button></Link>
-              <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">Contact Us</Button></Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-6 text-sm">
-              <div className="flex items-center gap-2 text-zinc-300"><Shield className="h-4 w-4 text-[#f5c451]"/> Trusted Seller</div>
-              <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> Fast Replies</div>
-              <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
-            </div>
-          </div>
-          <div className="group"><HeroTrending products={trending} currency={currency} /></div>
           </div>
         </div>
       </section>
 
-      {/* Ordered, toggleable sections */}
-      {ordered.map(x => x.visible ? sectionRenderers[x.key]?.() : null)}
+      {/* Ordered, toggleable sections (with PC/mobile visibility) */}
+      {ordered.map(x => {
+        if (!x.visible) return null
+        const node = sectionRenderers[x.key]?.()
+        if (!node) return null
+        const cls = deviceClass(x.show_desktop !== false, x.show_mobile !== false)
+        return <div key={x.key} className={cls}>{node}</div>
+      })}
 
       {/* Empty state */}
       {!anyProduct && categories.length === 0 && (
