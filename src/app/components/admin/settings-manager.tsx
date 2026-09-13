@@ -8,6 +8,7 @@ import { apiGet, apiSend } from './api'
 interface SectionConfig { key: string; label: string; title: string; visible: boolean; show_desktop: boolean; show_mobile: boolean; sort: number }
 interface Settings {
   siteName: string; tagline: string; currency: string
+  brandTagline: string; brandTaglineVisible: boolean
   heroBadge: string; heroTitle: string; heroSubtitle: string; heroCtaText: string
   heroImages: string[]
   heroTrending: boolean
@@ -54,7 +55,7 @@ export function SettingsManager() {
   async function saveStore(e: React.FormEvent) {
     e.preventDefault(); setSavingStore(true); setStoreMsg(null)
     try {
-      await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency })
+      await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency, brandTagline: settings!.brandTagline, brandTaglineVisible: settings!.brandTaglineVisible })
       setStoreMsg('Saved ✓'); setTimeout(() => setStoreMsg(null), 2500)
     } catch (err) { setStoreMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingStore(false) }
   }
@@ -121,6 +122,23 @@ export function SettingsManager() {
     } catch (err) { setHeroMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingHero(false) }
   }
 
+  // auto-save for switch-style controls (visibility/device toggles)
+  const [autoSaved, setAutoSaved] = useState(false)
+  async function autoSave(next: Settings) {
+    setSettings(next)
+    try {
+      await apiSend('/api/admin/settings', 'PATCH', {
+        heroTrending: next.heroTrending,
+        heroTrendingDesktop: next.heroTrendingDesktop,
+        heroTrendingMobile: next.heroTrendingMobile,
+        brandTaglineVisible: next.brandTaglineVisible,
+        sections: next.sections,
+      })
+      setAutoSaved(true)
+      setTimeout(() => setAutoSaved(false), 1600)
+    } catch { /* toast below the toggle state stays local */ }
+  }
+
   async function saveCredentials(e: React.FormEvent) {
     e.preventDefault(); setSavingAuth(true); setAuthMsg(null)
     try {
@@ -167,6 +185,17 @@ export function SettingsManager() {
             <div>
               <Label>Tagline</Label>
               <Input value={settings.tagline} onChange={e => setSettings(s => ({ ...s!, tagline: e.target.value }))} className="mt-1.5" />
+            </div>
+            <div>
+              <Label>Navbar subtitle — the small text under the site name</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Input value={settings.brandTagline} onChange={e => setSettings(s => ({ ...s!, brandTagline: e.target.value }))} placeholder="Premium Store" className="flex-1" />
+                <button type="button" onClick={() => settings && autoSave({ ...settings, brandTaglineVisible: !settings.brandTaglineVisible })}
+                  className={`shrink-0 rounded-xl px-3 py-2.5 text-xs font-medium border transition ${settings.brandTaglineVisible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
+                  {settings.brandTaglineVisible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
+                </button>
+              </div>
+              <p className="text-[11px] text-zinc-600 mt-1">Appears under the site name in the navbar. When hidden the name stays in place (no shift).</p>
             </div>
             <div>
               <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Site icon (favicon + navbar logo letter)</Label>
@@ -250,16 +279,16 @@ export function SettingsManager() {
             <div className="pt-3 border-t border-white/10">
               <Label className="mb-2 block">Trending slider (hero right side — most visited products)</Label>
               <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => setSettings(st => ({ ...st!, heroTrending: !st!.heroTrending }))}
+                <button type="button" onClick={() => settings && autoSave({ ...settings, heroTrending: !settings.heroTrending })}
                   className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${stOn(settings.heroTrending) ? stOnCls() : stOffCls()}`}>
                   {settings.heroTrending ? '✓ Shown' : 'Hidden'} — master
                 </button>
                 <span className="text-zinc-600 text-xs">on</span>
-                <button type="button" disabled={!settings.heroTrending} onClick={() => setSettings(st => ({ ...st!, heroTrendingDesktop: !st!.heroTrendingDesktop }))}
+                <button type="button" disabled={!settings.heroTrending} onClick={() => settings && autoSave({ ...settings, heroTrendingDesktop: !settings.heroTrendingDesktop })}
                   className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingDesktop) ? stOnCls() : stOffCls()}`}>
                   <Monitor className="inline h-3.5 w-3.5 mr-1" />PC {settings.heroTrendingDesktop ? '✓' : '✗'}
                 </button>
-                <button type="button" disabled={!settings.heroTrending} onClick={() => setSettings(st => ({ ...st!, heroTrendingMobile: !st!.heroTrendingMobile }))}
+                <button type="button" disabled={!settings.heroTrending} onClick={() => settings && autoSave({ ...settings, heroTrendingMobile: !settings.heroTrendingMobile })}
                   className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingMobile) ? stOnCls() : stOffCls()}`}>
                   <Smartphone className="inline h-3.5 w-3.5 mr-1" />Phone {settings.heroTrendingMobile ? '✓' : '✗'}
                 </button>
@@ -277,17 +306,17 @@ export function SettingsManager() {
                     <span className="text-xs text-zinc-500 w-24 shrink-0">{sec.label}</span>
                     <Input value={sec.title} onChange={e => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, title: e.target.value } : x) }))} className="flex-1 h-8 text-xs min-w-24" placeholder="Section title" />
                     <div className="flex items-center gap-1 shrink-0">
-                      <button type="button" disabled={!sec.visible} onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, show_desktop: !x.show_desktop } : x) }))}
+                      <button type="button" disabled={!sec.visible} onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, show_desktop: !x.show_desktop } : x) })}
                         className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_desktop ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
                         title="Show on PC">
                         <Monitor className="inline h-3 w-3" />
                       </button>
-                      <button type="button" disabled={!sec.visible} onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, show_mobile: !x.show_mobile } : x) }))}
+                      <button type="button" disabled={!sec.visible} onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, show_mobile: !x.show_mobile } : x) })}
                         className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_mobile ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
                         title="Show on Phone">
                         <Smartphone className="inline h-3 w-3" />
                       </button>
-                      <button type="button" onClick={() => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, visible: !x.visible } : x) }))}
+                      <button type="button" onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, visible: !x.visible } : x) })}
                         className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium border transition ${sec.visible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
                         {sec.visible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
                       </button>
@@ -300,6 +329,7 @@ export function SettingsManager() {
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={savingHero}>{savingHero && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Save homepage</Button>
               {heroMsg && <span className="text-sm text-emerald-400">{heroMsg}</span>}
+              {autoSaved && <span className="text-sm text-[#22d3ee]">✓ Saved instantly — toggles are saved automatically</span>}
             </div>
           </form>
         </CardContent>

@@ -17,6 +17,8 @@ export async function PATCH(req: NextRequest) {
   if (body.siteName !== undefined) store.settings.siteName = String(body.siteName).trim() || store.settings.siteName
   if (body.tagline !== undefined) store.settings.tagline = String(body.tagline)
   if (body.currency !== undefined) store.settings.currency = String(body.currency).trim().toUpperCase() || store.settings.currency
+  if (body.brandTagline !== undefined) store.settings.brandTagline = String(body.brandTagline)
+  if (body.brandTaglineVisible !== undefined) store.settings.brandTaglineVisible = !!body.brandTaglineVisible
   if (body.heroBadge !== undefined) store.settings.heroBadge = String(body.heroBadge)
   if (body.heroTitle !== undefined) store.settings.heroTitle = String(body.heroTitle)
   if (body.heroSubtitle !== undefined) store.settings.heroSubtitle = String(body.heroSubtitle)

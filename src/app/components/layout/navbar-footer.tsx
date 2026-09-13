@@ -9,11 +9,15 @@ export async function Navbar() {
   let cats: { name: string; slug: string }[] = []
   let siteName = 'DigitalStore'
   let siteIcon: string | null = null
+  let brandTagline = 'Premium Store'
+  let brandTaglineVisible = true
   try {
     const [catsRes, store] = await Promise.all([getAllCategories(), readStore()])
     cats = catsRes.slice(0, 4)
     if (store.settings?.siteName) siteName = store.settings.siteName
     siteIcon = store.settings?.siteIcon || null
+    if (store.settings?.brandTagline !== undefined) brandTagline = store.settings.brandTagline
+    brandTaglineVisible = store.settings?.brandTaglineVisible !== false
   } catch {}
 
   // two-tone wordmark: first part white, last part gold
@@ -44,11 +48,12 @@ export async function Navbar() {
                 {siteName.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="leading-none hidden sm:block">
-              <div className="font-extrabold text-lg tracking-wide text-white">
+            <div className="leading-none">
+              <div className="font-extrabold text-base sm:text-lg tracking-wide text-white whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] sm:max-w-none">
                 {nameFirst.toUpperCase()}<span className="text-[#f5c451]">{nameGold.toUpperCase()}</span>
               </div>
-              <div className="text-[9px] tracking-[0.25em] text-zinc-500 uppercase mt-1">Premium Store</div>
+              {/* tagline row keeps its height even when hidden so the name never shifts */}
+              <div className={`text-[9px] tracking-[0.25em] text-zinc-500 uppercase mt-1 h-3 ${brandTaglineVisible ? '' : 'invisible'}`}>{brandTagline || ' '}</div>
             </div>
           </Link>
 
