@@ -118,7 +118,7 @@ export function CategoryManager() {
                 <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What kind of products live here…" rows={3} className="mt-1.5" />
               </div>
               <div>
-                <Label className="flex items-center gap-2"><Image className="h-4 w-4" /> Category image (optional)</Label>
+                <Label className="flex items-center gap-2"><Image className="h-4 w-4" /> Category image (optional — fixed cover)</Label>
                 <div className="mt-2 space-y-2">
                   {imageUrl && (
                     <div className="relative inline-block">
@@ -128,6 +128,7 @@ export function CategoryManager() {
                   )}
                   <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} className="mt-1.5" />
                   {uploading && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
+                  <p className="text-[11px] text-zinc-600">If set, this image is <b className="text-zinc-400">pinned</b> as the card cover on the homepage. Leave empty to auto-slide through the products' covers inside this category.</p>
                 </div>
               </div>
               <div className="flex gap-2 pt-2">

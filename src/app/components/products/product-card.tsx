@@ -63,11 +63,18 @@ export function CategoryCard({ cat, previewImages = [] }: { cat: { id:string; na
   return (
     <Link href={`/categories/${cat.slug}`} className="group relative block overflow-hidden rounded-2xl border border-white/5 bg-[#111] hover:border-[#22d3ee]/40 transition">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#161616]">
-        {previewImages.length > 1 ? (
+        {cat.image_url ? (
+          // admin-set image = fixed cover, never replaced by product previews
+          <img
+            src={cat.image_url}
+            alt={cat.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+          />
+        ) : previewImages.length > 1 ? (
           <ImageSlider images={previewImages} alt={cat.name} autoMs={3000} showDots={false} fill className="!rounded-none" />
         ) : (
           <img
-            src={previewImages[0] || cat.image_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop'}
+            src={previewImages[0] || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop'}
             alt={cat.name}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
           />
