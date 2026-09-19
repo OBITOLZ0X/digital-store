@@ -4,13 +4,10 @@ import { useRef } from 'react'
 import { Star, Zap, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, Badge, Button } from '@/app/components/ui/ui'
 import { ImageSlider } from './image-slider'
-import { t } from '@/lib/i18n'
-import { useLang } from '@/lib/i18n/context'
 
 // Landing-style card: price + durations + "order via chat" CTA. No stock, no cart.
 export function ProductCard({ product, currency = 'DZD' }: { product: Record<string, unknown> & { id:string; name:string; slug:string; image_url?:string|null; images?:string[]; price:number; compare_at_price?:number|null; is_featured?:boolean; variants?:{name:string;price:number;duration_days?:number|null}[] }; currency?: string }){
   const gallery = (product.images as string[])?.length ? (product.images as string[]) : (product.image_url ? [product.image_url as string] : [])
-  const lang = useLang()
   const img = gallery[0] || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop'
   const discount = product.compare_at_price ? Math.round((1 - Number(product.price)/Number(product.compare_at_price))*100) : 0
   const variants = (product.variants as {name:string;price:number;duration_days?:number|null}[]) || []
@@ -21,7 +18,7 @@ export function ProductCard({ product, currency = 'DZD' }: { product: Record<str
         <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {discount > 0 && <Badge variant="destructive">-{discount}%</Badge>}
-          {product.is_featured && <Badge className="bg-[#f5c451] text-black border-0"><Zap className="h-3 w-3 mr-1"/> {t(lang, 'card.featured')}</Badge>}
+          {product.is_featured && <Badge className="bg-[#f5c451] text-black border-0"><Zap className="h-3 w-3 mr-1"/> Featured</Badge>}
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
       </Link>
@@ -39,18 +36,18 @@ export function ProductCard({ product, currency = 'DZD' }: { product: Record<str
                 {v.name} · {Number(v.price).toFixed(0)} {currency}
               </span>
             ))}
-            {variants.length > 3 && <span className="text-[11px] text-zinc-500 self-center">+{variants.length-3} {t(lang, 'card.more')}</span>}
+            {variants.length > 3 && <span className="text-[11px] text-zinc-500 self-center">+{variants.length-3} more</span>}
           </div>
         )}
         <div className="flex items-end justify-between gap-2">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-bold text-white">
-              {multi ? `${t(lang, 'home.from')} ${Number(product.price).toFixed(2)}` : Number(product.price).toFixed(2)}
+              {multi ? `From ${Number(product.price).toFixed(2)}` : Number(product.price).toFixed(2)}
               {' '}<span className="text-xs font-normal text-zinc-500">{currency}</span>
             </span>
             {product.compare_at_price ? <span className="text-xs text-zinc-500 line-through">{Number(product.compare_at_price).toFixed(2)}</span> : null}
           </div>
-          <Link href={`/products/${product.slug}`}><Button size="sm" variant="outline" className="rounded-full border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]">{t(lang, 'card.details')} <ArrowRight className="h-3.5 w-3.5"/></Button></Link>
+          <Link href={`/products/${product.slug}`}><Button size="sm" variant="outline" className="rounded-full border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]">Details <ArrowRight className="h-3.5 w-3.5"/></Button></Link>
         </div>
       </CardContent>
     </Card>
@@ -58,7 +55,7 @@ export function ProductCard({ product, currency = 'DZD' }: { product: Record<str
 }
 
 export function ProductGrid({ products, currency = 'DZD' }: { products: (Record<string, unknown> & { id:string; name:string; slug:string; image_url?:string|null; images?:string[]; price:number; compare_at_price?:number|null; is_featured?:boolean; variants?:{name:string;price:number}[] })[]; currency?: string }){
-  if (!products.length) return <div className="text-center py-12 text-zinc-500">{t('en', 'card.noProducts')}</div>
+  if (!products.length) return <div className="text-center py-12 text-zinc-500">No products found.</div>
   return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{products.map(p=><ProductCard key={p.id} product={p} currency={currency} />)}</div>
 }
 

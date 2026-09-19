@@ -8,7 +8,6 @@ import { apiGet, apiSend } from './api'
 interface SectionConfig { key: string; label: string; title: string; visible: boolean; show_desktop: boolean; show_mobile: boolean; sort: number }
 interface Settings {
   siteName: string; tagline: string; currency: string
-  defaultLang?: 'en' | 'fr'
   brandTagline: string; brandTaglineVisible: boolean
   heroBadge: string; heroTitle: string; heroSubtitle: string; heroCtaText: string
   heroImages: string[]
@@ -56,7 +55,7 @@ export function SettingsManager() {
   async function saveStore(e: React.FormEvent) {
     e.preventDefault(); setSavingStore(true); setStoreMsg(null)
     try {
-      await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency, brandTagline: settings!.brandTagline, brandTaglineVisible: settings!.brandTaglineVisible, defaultLang: settings!.defaultLang || 'en' })
+      await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency, brandTagline: settings!.brandTagline, brandTaglineVisible: settings!.brandTaglineVisible })
       setStoreMsg('Saved ✓'); setTimeout(() => setStoreMsg(null), 2500)
     } catch (err) { setStoreMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingStore(false) }
   }
@@ -181,17 +180,6 @@ export function SettingsManager() {
               <div>
                 <Label>Currency code</Label>
                 <Input value={settings.currency} onChange={e => setSettings(s => ({ ...s!, currency: e.target.value }))} placeholder="DZD" className="mt-1.5" />
-              </div>
-              <div>
-                <Label>Default language (first-time visitors)</Label>
-                <select
-                  value={settings.defaultLang || 'en'}
-                  onChange={e => setSettings(s => ({ ...s!, defaultLang: e.target.value as 'en' | 'fr' }))}
-                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#111] px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/40"
-                >
-                  <option value="en">English</option>
-                  <option value="fr">Français</option>
-                </select>
               </div>
             </div>
             <div>

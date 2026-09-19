@@ -1,59 +1,41 @@
 import Link from 'next/link'
-import { getLang } from '@/lib/i18n/server'
-import { t } from '@/lib/i18n'
-import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 
-export const dynamic = 'force-dynamic'
-
-export async function TermsPage(){
-  const lang = await getLang()
-
-  const T = (k: string) => t(lang, k)
+export function TermsPage(){
   return (
-    <>
-      <Navbar />
-      <Legal title={T('terms.title')} lang={lang}>
-        <p>{T('terms.updated')}</p>
-        <h3>{T('terms.orders')}</h3>
-        <p>{T('terms.ordersText')}</p>
-        <h3>{T('terms.payment')}</h3>
-        <p>{T('terms.paymentText')}</p>
-        <h3>{T('terms.delivery')}</h3>
-        <p>{T('terms.deliveryText')}</p>
-        <h3>{T('terms.refunds')}</h3>
-        <p>{T('terms.refundsText')}</p>
-        <h3>{T('terms.prohibited')}</h3>
-        <p>{T('terms.prohibitedText')}</p>
-      </Legal>
-      <Footer lang={lang} />
-    </>
+    <Legal title="Terms of Service">
+      <p>Last updated: September 2026</p>
+      <h3>1. Orders</h3>
+      <p>All orders are placed through our contact channels (WhatsApp, Telegram, etc.). By messaging us about a product you agree to these terms.</p>
+      <h3>2. Payment</h3>
+      <p>Payment is arranged directly in the chat before delivery. Prices are listed on each product page per period.</p>
+      <h3>3. Delivery</h3>
+      <p>Products are delivered through the same chat channel used for ordering, after payment confirmation.</p>
+      <h3>4. Refunds</h3>
+      <p>Refunds are handled case by case in the chat. Digital items already delivered may be non-refundable.</p>
+      <h3>5. Prohibited Use</h3>
+      <p>Fraud, chargeback abuse, or reselling credentials without authorization may result in refusal of service.</p>
+    </Legal>
   )
 }
 
-export async function PrivacyPage(){
-  const lang = await getLang()
-  const T = (k: string) => t(lang, k)
+export function PrivacyPage(){
   return (
-    <>
-      <Navbar />
-      <Legal title={T('privacy.title')} lang={lang}>
-        <p>{T('privacy.updated')}</p>
-        <h3>{T('privacy.collect')}</h3>
-        <p>{T('privacy.collectText')}</p>
-        <h3>{T('privacy.use')}</h3>
-        <p>{T('privacy.useText')}</p>
-        <h3>{T('privacy.analytics')}</h3>
-        <p>{T('privacy.analyticsText')}</p>
-      </Legal>
-      <Footer lang={lang} />
-    </>
+    <Legal title="Privacy Policy">
+      <p>Last updated: September 2026</p>
+      <h3>Data We Collect</h3>
+      <p>We do not require accounts. We only see what you send us in chat (your name and messages) and anonymous page-visit counts used to know which products are popular.</p>
+      <h3>How We Use Data</h3>
+      <p>To process your order and improve the catalog. We do not sell data.</p>
+      <h3>Analytics</h3>
+      <p>Product pages count anonymous views (no profiles, no tracking cookies, no ads).</p>
+    </Legal>
   )
 }
 
-function Legal({ title, children, lang='en' }:{ title:string; children:React.ReactNode; lang?:'en'|'fr' }){
+function Legal({ title, children }:{ title:string; children:React.ReactNode }){
   return (
     <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-12 text-sm text-zinc-400 leading-relaxed [&_h3]:text-white [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_a]:text-[#22d3ee]">
-      <Link href="/" className="text-[#22d3ee] hover:text-[#22d3ee] text-sm">← {t(lang, 'terms.back')}</Link>
+      <Link href="/" className="text-[#22d3ee] hover:text-[#22d3ee] text-sm">← Back to store</Link>
       <h1 className="text-3xl font-black text-white mt-4 mb-4">{title}</h1>
       {children}
     </div>

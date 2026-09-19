@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { MessageCircle, Send, Mail, AtSign, Share2, Globe, Copy, Check, ExternalLink } from 'lucide-react'
-import { t, type Lang } from '@/lib/i18n'
 
 const ICONS: Record<string, typeof MessageCircle> = {
   whatsapp: MessageCircle, telegram: Send, email: Mail, instagram: AtSign, facebook: Share2, custom: Globe,
@@ -16,13 +15,11 @@ export function ContactButtons({
   productName,
   selected,
   currency = 'DZD',
-  lang = 'en' as Lang,
 }: {
   channels: { id: string; label: string; type: string; url: string; color: string }[]
   productName: string
   selected?: { id: string; name: string; price: number; duration_days: number | null } | null
   currency?: string
-  lang?: Lang
 }) {
   const [copied, setCopied] = useState<string | null>(null)
 
@@ -31,10 +28,10 @@ export function ContactButtons({
     setCopied(id); setTimeout(() => setCopied(null), 1500)
   }
 
-  const lines = [t(lang, 'buy.msgHello', { name: productName })]
+  const lines = [`Hello! I want to buy: ${productName}`]
   if (selected) {
-    lines.push(t(lang, 'buy.msgPeriod', { name: selected.name, days: selected.duration_days || 0 }))
-    lines.push(t(lang, 'buy.msgPrice', { price: Number(selected.price).toLocaleString('en-US'), currency }))
+    lines.push(`Period: ${selected.name}${selected.duration_days ? ` (${selected.duration_days} days)` : ''}`)
+    lines.push(`Price: ${Number(selected.price).toLocaleString('en-US')} ${currency}`)
   }
   const msg = encodeURIComponent(lines.join('\n'))
 
@@ -58,7 +55,7 @@ export function ContactButtons({
               type="button"
               onClick={() => copy(c.id, c.url)}
               className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-[#161616] transition"
-              title={t(lang, "buy.copyLink")}
+              title="Copy link"
             >
               {copied === c.id ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
             </button>

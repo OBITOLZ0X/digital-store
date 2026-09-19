@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { readStore } from "@/lib/store";
-import { getLang } from "@/lib/i18n/server";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -39,10 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const lang = await getLang()
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={lang} className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#0a0a0a] text-zinc-100 font-[family-name:var(--font-inter)]">{children}</body>
     </html>
   );

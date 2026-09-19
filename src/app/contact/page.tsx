@@ -2,22 +2,19 @@ import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { getContactChannels } from '@/lib/queries'
 import { contactHref } from '@/lib/store'
 import { MessageCircle, Send, Mail, AtSign, Share2, Globe, ExternalLink } from 'lucide-react'
-import { getLang } from '@/lib/i18n/server'
-import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 const ICONS: Record<string, typeof MessageCircle> = { whatsapp: MessageCircle, telegram: Send, email: Mail, instagram: AtSign, facebook: Share2, custom: Globe }
 
 export default async function ContactPage(){
-  const lang = await getLang()
   const contacts = await getContactChannels()
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="mx-auto max-w-4xl w-full px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-black text-white">{t(lang, 'contact.title')}</h1>
-        <p className="text-zinc-400 mt-2 mb-8">{t(lang, 'contact.subtitle')}</p>
+        <h1 className="text-3xl font-black text-white">Contact Us</h1>
+        <p className="text-zinc-400 mt-2 mb-8">Reach us on any channel below — we usually reply within a few minutes. To order, tell us the product and period you want.</p>
         <div className="grid sm:grid-cols-2 gap-4">
           {contacts.map(c => {
             const Icon = ICONS[c.type] || Globe
@@ -38,9 +35,9 @@ export default async function ContactPage(){
             )
           })}
         </div>
-        {contacts.length === 0 && <p className="text-zinc-500">{t(lang, 'contact.empty')}</p>}
+        {contacts.length === 0 && <p className="text-zinc-500">Contact channels will appear here once configured.</p>}
       </div>
-      <Footer lang={lang} />
+      <Footer />
     </div>
   )
 }
