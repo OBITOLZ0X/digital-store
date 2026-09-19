@@ -51,12 +51,24 @@ export async function POST(req: NextRequest) {
 
   const store = await readStore()
   const now = new Date().toISOString()
+  // Accept bilingual description (object {en, fr}) or plain string for backward compat
+  const descRaw = body.description ?? body.descriptions
+  let description: string
+  let short_description: string
+  if (descRaw && typeof descRaw === 'object' && 'en' in descRaw) {
+    const d = descRaw as { en?: string; fr?: string }
+    description = JSON.stringify({ en: String(d.en || ''), fr: String(d.fr || '') })
+    short_description = String(d.en || '')
+  } else {
+    description = String(descRaw || '')
+    short_description = String(body.short_description || '')
+  }
   const product: Product = {
     id: generateId(),
     slug: `${slugify(name)}-${generateId().slice(0, 6)}`,
     name,
-    description: String(body.description || ''),
-    short_description: String(body.short_description || ''),
+    description,
+    short_description,
     category_id: (Array.isArray(body.category_ids) && body.category_ids.length ? String(body.category_ids[0]) : (body.category_id || null)),
     category_ids: Array.isArray(body.category_ids) ? body.category_ids.map(String) : (body.category_id ? [String(body.category_id)] : []),
     image_url: body.image_url || null,

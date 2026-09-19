@@ -1,369 +1,221 @@
+// Admin settings: site brand + EN/FR admin text translations
 'use client'
+import { useState } from 'react'
+import { Save, Globe, MessageSquare } from 'lucide-react'
+import { Button } from '@/app/components/ui/ui'
+import { t, type Lang } from '@/lib/i18n'
+import { LANGS } from '@/lib/i18n'
 
-import { useEffect, useRef, useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Label } from '@/app/components/ui/ui'
-import { Loader2, KeyRound, Globe, LayoutDashboard, Eye, EyeOff, ArrowUp, ArrowDown, Upload, X, ImageIcon, Monitor, Smartphone } from 'lucide-react'
-import { apiGet, apiSend } from './api'
-
-interface SectionConfig { key: string; label: string; title: string; visible: boolean; show_desktop: boolean; show_mobile: boolean; sort: number }
-interface Settings {
-  siteName: string; tagline: string; currency: string
-  brandTagline: string; brandTaglineVisible: boolean
-  heroBadge: string; heroTitle: string; heroSubtitle: string; heroCtaText: string
-  heroImages: string[]
-  heroTrending: boolean
-  heroTrendingDesktop: boolean
-  heroTrendingMobile: boolean
-  sections: SectionConfig[]
-}
-
-const stOnCls = () => 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-const stOffCls = () => 'border-white/10 bg-transparent text-zinc-500'
-const stOn = (b: boolean | undefined) => b !== false
-
-export function SettingsManager() {
-  const [settings, setSettings] = useState<Settings | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [savingStore, setSavingStore] = useState(false)
-  const [savingHero, setSavingHero] = useState(false)
-  const [savingAuth, setSavingAuth] = useState(false)
-  const [storeMsg, setStoreMsg] = useState<string | null>(null)
-  const [heroMsg, setHeroMsg] = useState<string | null>(null)
-  const [authMsg, setAuthMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [creds, setCreds] = useState({ current_password: '', new_email: '', new_password: '' })
-  const [iconPreview, setIconPreview] = useState<string | null>(null)
-  const [uploadingIcon, setUploadingIcon] = useState(false)
-  const [uploadingHero, setUploadingHero] = useState(false)
-  const iconInputRef = useRef<HTMLInputElement>(null)
-  const heroInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    Promise.all([
-      apiGet<Settings>('/api/admin/settings'),
-      apiGet<{ email: string; platform: string }>('/api/admin/credentials'),
-      fetch('/api/admin/site-icon').then(r => r.ok ? r.json() : { icon: null }),
-    ]).then(([s, c, ic]) => {
-      setSettings(s)
-      setCreds(prev => ({ ...prev, new_email: c.email || '' }))
-      setPlatform(c.platform)
-      setIconPreview(ic.icon || null)
-    }).catch(() => {}).finally(() => setLoading(false))
-  }, [])
-
-  const [platform, setPlatform] = useState('self-hosted')
-
-  async function saveStore(e: React.FormEvent) {
-    e.preventDefault(); setSavingStore(true); setStoreMsg(null)
-    try {
-      await apiSend('/api/admin/settings', 'PATCH', { siteName: settings!.siteName, tagline: settings!.tagline, currency: settings!.currency, brandTagline: settings!.brandTagline, brandTaglineVisible: settings!.brandTaglineVisible })
-      setStoreMsg('Saved ✓'); setTimeout(() => setStoreMsg(null), 2500)
-    } catch (err) { setStoreMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingStore(false) }
+export function SettingsManager({ initial }: {
+  initial?: {
+    siteName: string; brandTagline: string; brandTaglineVisible: boolean; siteIcon: string | null; defaultLang: Lang
+    heroTitle: { en: string; fr: string }; heroSubtitle: { en: string; fr: string }
+    heroBadge: string; heroBadgeVisible: boolean; heroVisible: boolean
+    homeSectionNew: { en: string; fr: string }; homeSectionTrending: { en: string; fr: string }
+    homeSectionFeatured: { en: string; fr: string }; homeSectionCategories: { en: string; fr: string }
+    homeFeaturedCount: number; homeTrendingCount: number
+    contactWhatsApp: string; contactTelegram: string; contactEmail: string
+    contactWhatsAppVisible: boolean; contactTelegramVisible: boolean; contactEmailVisible: boolean
+    contactTitle: { en: string; fr: string }; contactSubtitle: { en: string; fr: string }
+    faqTitle: { en: string; fr: string }; faqSubtitle: { en: string; fr: string }
+    termsTitle: { en: string; fr: string }; privacyTitle: { en: string; fr: string }
+    dashboardTitle: { en: string; fr: string }; dashboardDesc: { en: string; fr: string }
+    noProductsTitle: { en: string; fr: string }; noProductsDesc: { en: string; fr: string }
+    notFoundTitle: { en: string; fr: string }; notFoundDesc: { en: string; fr: string }
+    searchTitle: { en: string; fr: string }; searchNoResults: { en: string; fr: string }
   }
-
-  async function uploadImage(file: File, folder: string): Promise<string> {
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('folder', folder)
-    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error || 'Upload failed')
-    return data.url as string
+}) {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const d = {
+    siteName: 'Zizou Store', brandTagline: 'Premium Store', brandTaglineVisible: true, siteIcon: null, defaultLang: 'en' as Lang,
+    heroTitle: { en: 'Premium Digital Subscriptions', fr: 'Abonnements Digitaux Premium' },
+    heroSubtitle: { en: 'Subscriptions, IPTV, software licenses, game cards and gift cards — all in one store.', fr: 'Abonnements, IPTV, licences logicielles, cartes de jeu et cartes cadeaux — tout dans un seul magasin.' },
+    heroBadge: 'Digital Store', heroBadgeVisible: true, heroVisible: true,
+    homeSectionNew: { en: 'New Arrivals', fr: 'Nouveautés' }, homeSectionTrending: { en: 'Trending Now', fr: 'Populaires' }, homeSectionFeatured: { en: 'Featured', fr: 'Mis en avant' }, homeSectionCategories: { en: 'Categories', fr: 'Catégories' },
+    homeFeaturedCount: 8, homeTrendingCount: 8,
+    contactWhatsApp: '', contactTelegram: '', contactEmail: '',
+    contactWhatsAppVisible: false, contactTelegramVisible: false, contactEmailVisible: false,
+    contactTitle: { en: 'Need help?', fr: 'Besoin daide ?' }, contactSubtitle: { en: 'Message us on any platform — we respond fast, no account needed.', fr: 'Écrivez-nous sur nimporte quelle plateforme — réponse rapide, aucun compte requis.' },
+    faqTitle: { en: 'Frequently Asked Questions', fr: 'Foire Aux Questions' }, faqSubtitle: { en: "Find answers to the most common questions about our store and products.", fr: "Trouvez les réponses aux questions les plus fréquentes sur notre magasin et nos produits." },
+    termsTitle: { en: 'Terms of Service', fr: "Conditions d'Utilisation" }, privacyTitle: { en: 'Privacy Policy', fr: 'Politique de Confidentialité' },
+    dashboardTitle: { en: 'Dashboard', fr: 'Tableau de Bord' }, dashboardDesc: { en: 'Overview of your store performance.', fr: "Vue densemble des performances de votre magasin." },
+    noProductsTitle: { en: 'No Products Yet', fr: "Pas encore de produits" }, noProductsDesc: { en: 'Check back soon — new products are added regularly.', fr: "Revenez bientôt — de nouveaux produits sont ajoutés régulièrement." },
+    notFoundTitle: { en: 'Product Not Found', fr: 'Produit Introuvable' }, notFoundDesc: { en: "This product may have been removed or the link is invalid.", fr: "Ce produit a peut-être été supprimé ou le lien est invalide." },
+    searchTitle: { en: 'Search Results', fr: 'Résultats de Recherche' }, searchNoResults: { en: 'No results found.', fr: "Aucun résultat trouvé." },
+    ...initial,
   }
+  const [name, setName] = useState(d.siteName)
+  const [tagline, setTagline] = useState(d.brandTagline)
+  const [taglineVisible, setTaglineVisible] = useState(d.brandTaglineVisible)
+  const [icon, setIcon] = useState(d.siteIcon || '')
+  const [defaultLang, setDefaultLang] = useState(d.defaultLang)
+  // Hero
+  const [heroTitle, setHeroTitle] = useState(d.heroTitle)
+  const [heroSubtitle, setHeroSubtitle] = useState(d.heroSubtitle)
+  const [heroBadge, setHeroBadge] = useState(d.heroBadge)
+  const [heroBadgeVisible, setHeroBadgeVisible] = useState(d.heroBadgeVisible)
+  const [heroVisible, setHeroVisible] = useState(d.heroVisible)
+  // Home sections
+  const [homeSectionNew, setHomeSectionNew] = useState(d.homeSectionNew)
+  const [homeSectionTrending, setHomeSectionTrending] = useState(d.homeSectionTrending)
+  const [homeSectionFeatured, setHomeSectionFeatured] = useState(d.homeSectionFeatured)
+  const [homeSectionCategories, setHomeSectionCategories] = useState(d.homeSectionCategories)
+  const [homeFeaturedCount, setHomeFeaturedCount] = useState(d.homeFeaturedCount)
+  const [homeTrendingCount, setHomeTrendingCount] = useState(d.homeTrendingCount)
+  // Contact
+  const [contactWhatsApp, setContactWhatsApp] = useState(d.contactWhatsApp)
+  const [contactTelegram, setContactTelegram] = useState(d.contactTelegram)
+  const [contactEmail, setContactEmail] = useState(d.contactEmail)
+  const [contactWhatsAppVisible, setContactWhatsAppVisible] = useState(d.contactWhatsAppVisible)
+  const [contactTelegramVisible, setContactTelegramVisible] = useState(d.contactTelegramVisible)
+  const [contactEmailVisible, setContactEmailVisible] = useState(d.contactEmailVisible)
+  const [contactTitle, setContactTitle] = useState(d.contactTitle)
+  const [contactSubtitle, setContactSubtitle] = useState(d.contactSubtitle)
+  // FAQ
+  const [faqTitle, setFaqTitle] = useState(d.faqTitle)
+  const [faqSubtitle, setFaqSubtitle] = useState(d.faqSubtitle)
+  // Legal
+  const [termsTitle, setTermsTitle] = useState(d.termsTitle)
+  const [privacyTitle, setPrivacyTitle] = useState(d.privacyTitle)
+  // Dashboard
+  const [dashboardTitle, setDashboardTitle] = useState(d.dashboardTitle)
+  const [dashboardDesc, setDashboardDesc] = useState(d.dashboardDesc)
+  // 404 / no-products / search
+  const [noProductsTitle, setNoProductsTitle] = useState(d.noProductsTitle)
+  const [noProductsDesc, setNoProductsDesc] = useState(d.noProductsDesc)
+  const [notFoundTitle, setNotFoundTitle] = useState(d.notFoundTitle)
+  const [notFoundDesc, setNotFoundDesc] = useState(d.notFoundDesc)
+  const [searchTitle, setSearchTitle] = useState(d.searchTitle)
+  const [searchNoResults, setSearchNoResults] = useState(d.searchNoResults)
 
-  async function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { setStoreMsg('Please select an image file'); return }
-    if (file.size > 5 * 1024 * 1024) { setStoreMsg('Icon too large (max 5MB)'); return }
-    setUploadingIcon(true); setStoreMsg(null)
+  async function save() {
+    setSaving(true); setError(''); setSaved(false)
     try {
-      const url = await uploadImage(file, 'branding')
-      const r = await apiSend<{ success: boolean }>('/api/admin/site-icon', 'POST', { url })
-      setIconPreview(url + (r.success ? '' : ''))
-      setStoreMsg('Icon updated ✓')
-      setTimeout(() => window.location.reload(), 800)
-    } catch (err) {
-      setStoreMsg(err instanceof Error ? err.message : 'Upload failed')
-    } finally { setUploadingIcon(false); if (iconInputRef.current) iconInputRef.current.value = '' }
-  }
-
-  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
-    setUploadingHero(true); setHeroMsg(null)
-    try {
-      const uploaded: string[] = []
-      for (const f of files) {
-        if (!f.type.startsWith('image/')) throw new Error('Image files only')
-        if (f.size > 5 * 1024 * 1024) throw new Error(`${f.name} too large (max 5MB)`)
-        uploaded.push(await uploadImage(f, 'hero'))
+      const body = {
+        siteName: name, brandTagline: tagline, brandTaglineVisible: taglineVisible, siteIcon: icon || null, defaultLang,
+        heroTitle, heroSubtitle, heroBadge, heroBadgeVisible, heroVisible,
+        homeSectionNew, homeSectionTrending, homeSectionFeatured, homeSectionCategories,
+        homeFeaturedCount, homeTrendingCount,
+        contactWhatsApp, contactTelegram, contactEmail,
+        contactWhatsAppVisible, contactTelegramVisible, contactEmailVisible,
+        contactTitle, contactSubtitle, faqTitle, faqSubtitle, termsTitle, privacyTitle,
+        dashboardTitle, dashboardDesc, noProductsTitle, noProductsDesc, notFoundTitle, notFoundDesc, searchTitle, searchNoResults,
       }
-      setSettings(s => ({ ...s!, heroImages: [...s!.heroImages, ...uploaded] }))
-    } catch (err) {
-      setHeroMsg(err instanceof Error ? err.message : 'Upload failed')
-    } finally { setUploadingHero(false); if (heroInputRef.current) heroInputRef.current.value = '' }
+      const res = await fetch('/api/admin/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      if (!res.ok) throw new Error('save_failed')
+      setSaved(true)
+    } catch { setError('Failed to save') }
+    setSaving(false)
   }
 
-  async function saveHero(e: React.FormEvent) {
-    e.preventDefault(); setSavingHero(true); setHeroMsg(null)
-    try {
-      await apiSend('/api/admin/settings', 'PATCH', {
-        heroBadge: settings!.heroBadge,
-        heroTitle: settings!.heroTitle,
-        heroSubtitle: settings!.heroSubtitle,
-        heroCtaText: settings!.heroCtaText,
-        heroImages: settings!.heroImages,
-        heroTrending: settings!.heroTrending,
-        heroTrendingDesktop: settings!.heroTrendingDesktop,
-        heroTrendingMobile: settings!.heroTrendingMobile,
-        sections: settings!.sections,
-      })
-      setHeroMsg('Saved ✓'); setTimeout(() => setHeroMsg(null), 2500)
-    } catch (err) { setHeroMsg(err instanceof Error ? err.message : 'Failed') } finally { setSavingHero(false) }
-  }
-
-  // auto-save for switch-style controls (visibility/device toggles)
-  const [autoSaved, setAutoSaved] = useState(false)
-  async function autoSave(next: Settings) {
-    setSettings(next)
-    try {
-      await apiSend('/api/admin/settings', 'PATCH', {
-        heroTrending: next.heroTrending,
-        heroTrendingDesktop: next.heroTrendingDesktop,
-        heroTrendingMobile: next.heroTrendingMobile,
-        brandTaglineVisible: next.brandTaglineVisible,
-        sections: next.sections,
-      })
-      setAutoSaved(true)
-      setTimeout(() => setAutoSaved(false), 1600)
-    } catch { /* toast below the toggle state stays local */ }
-  }
-
-  async function saveCredentials(e: React.FormEvent) {
-    e.preventDefault(); setSavingAuth(true); setAuthMsg(null)
-    try {
-      const res = await apiSend<{ success?: boolean; message?: string; note?: string }>('/api/admin/credentials', 'POST', creds)
-      setAuthMsg({ type: 'success', text: res.message || res.note || 'Credentials updated ✓' })
-      setCreds(prev => ({ ...prev, current_password: '', new_password: '' }))
-    } catch (err) {
-      setAuthMsg({ type: 'error', text: err instanceof Error ? err.message : 'Failed' })
-    } finally { setSavingAuth(false) }
-  }
-
-  function moveSection(key: string, dir: 1 | -1) {
-    setSettings(s => {
-      if (!s) return s
-      const arr = [...s.sections].sort((a, b) => a.sort - b.sort)
-      const i = arr.findIndex(x => x.key === key)
-      const j = i + dir
-      if (i < 0 || j < 0 || j >= arr.length) return s
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
-      return { ...s, sections: arr.map((x, idx) => ({ ...x, sort: idx + 1 })) }
-    })
-  }
-
-  if (loading || !settings) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#22d3ee]" /></div>
-
-  const orderedSections = [...settings.sections].sort((a, b) => a.sort - b.sort)
+  const bilingual = (label: string, enVal: string, frVal: string, setEn: (v: string) => void, setFr: (v: string) => void) => (
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div className="space-y-1">
+        <label className="text-xs text-zinc-500 block mb-1">{label} — EN</label>
+        <input value={enVal} onChange={e => setEn(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none focus:border-[#22d3ee]/50" />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs text-zinc-500 block mb-1">{label} — FR</label>
+        <input value={frVal} onChange={e => setFr(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none focus:border-[#22d3ee]/50" />
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
-      <Card className="border-white/10">
-        <CardHeader><CardTitle className="flex items-center gap-2"><Globe className="h-4 w-4 text-[#22d3ee]" /> Store settings</CardTitle></CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={saveStore} className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <Label>Store name</Label>
-                <Input value={settings.siteName} onChange={e => setSettings(s => ({ ...s!, siteName: e.target.value }))} className="mt-1.5" />
-              </div>
-              <div>
-                <Label>Currency code</Label>
-                <Input value={settings.currency} onChange={e => setSettings(s => ({ ...s!, currency: e.target.value }))} placeholder="DZD" className="mt-1.5" />
-              </div>
-            </div>
-            <div>
-              <Label>Tagline</Label>
-              <Input value={settings.tagline} onChange={e => setSettings(s => ({ ...s!, tagline: e.target.value }))} className="mt-1.5" />
-            </div>
-            <div>
-              <Label>Navbar subtitle — the small text under the site name</Label>
-              <div className="flex items-center gap-2 mt-1.5">
-                <Input value={settings.brandTagline} onChange={e => setSettings(s => ({ ...s!, brandTagline: e.target.value }))} placeholder="Premium Store" className="flex-1" />
-                <button type="button" onClick={() => settings && autoSave({ ...settings, brandTaglineVisible: !settings.brandTaglineVisible })}
-                  className={`shrink-0 rounded-xl px-3 py-2.5 text-xs font-medium border transition ${settings.brandTaglineVisible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
-                  {settings.brandTaglineVisible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
-                </button>
-              </div>
-              <p className="text-[11px] text-zinc-600 mt-1">Appears under the site name in the navbar. When hidden the name stays in place (no shift).</p>
-            </div>
-            <div>
-              <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Site icon (favicon + navbar logo letter)</Label>
-              <div className="mt-2 flex items-center gap-3">
-                {iconPreview ? (
-                  <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={iconPreview} alt="Site icon" className="h-14 w-14 rounded-xl object-cover border border-white/10" />
-                    <button type="button" onClick={async () => { await apiSend('/api/admin/site-icon', 'POST', { url: null }); setIconPreview(null); setTimeout(() => window.location.reload(), 500) }}
-                      className="absolute -top-2 -right-2 bg-[#161616] rounded-full p-1 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
-                  </div>
-                ) : (
-                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#f5c451] to-[#b8860b] flex items-center justify-center font-black text-black text-lg">
-                    {(settings.siteName || 'S').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <Input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon" onChange={handleIconUpload} ref={iconInputRef} className="mt-0 max-w-xs" />
-                  <p className="text-[11px] text-zinc-600 mt-1">Square image recommended (e.g. 256×256). Shown in the browser tab and as the navbar badge. Empty = first letter of the store name.</p>
-                </div>
-                {uploadingIcon && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={savingStore}>{savingStore && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Save</Button>
-              {storeMsg && <span className="text-sm text-emerald-400">{storeMsg}</span>}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {/* Language */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
+        <div className="flex items-center gap-2 mb-3"><Globe className="h-4 w-4 text-[#22d3ee]" /> <h3 className="font-semibold text-white text-sm">{t(defaultLang, 'settings.lang')}</h3></div>
+        <select value={defaultLang} onChange={e => setDefaultLang(e.target.value as Lang)} className="rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none">
+          {LANGS.map(l => <option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
+        </select>
+      </div>
 
-      <Card className="border-white/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><LayoutDashboard className="h-4 w-4 text-[#22d3ee]" /> Homepage content</CardTitle>
-          <p className="text-xs text-zinc-500">Control everything written on the homepage. Tip: wrap words in the title with | | to color them gold, e.g. <code className="bg-white/5 px-1 rounded">Premium |Digital Products| at the |Best Prices|</code></p>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={saveHero} className="space-y-5">
-            <div>
-              <Label>Badge (small pill above the title — leave empty to hide)</Label>
-              <Input value={settings.heroBadge} onChange={e => setSettings(s => ({ ...s!, heroBadge: e.target.value }))} className="mt-1.5" placeholder="Order directly via WhatsApp • Telegram" />
-            </div>
-            <div>
-              <Label>Main title</Label>
-              <Input value={settings.heroTitle} onChange={e => setSettings(s => ({ ...s!, heroTitle: e.target.value }))} className="mt-1.5" />
-            </div>
-            <div>
-              <Label>Subtitle</Label>
-              <textarea value={settings.heroSubtitle} onChange={e => setSettings(s => ({ ...s!, heroSubtitle: e.target.value }))} rows={3}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#22d3ee]" />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <Label>Main button text</Label>
-                <Input value={settings.heroCtaText} onChange={e => setSettings(s => ({ ...s!, heroCtaText: e.target.value }))} className="mt-1.5" />
-              </div>
-              <div>
-                <Label>Hero backdrop images</Label>
-                <div className="mt-1.5 space-y-2">
-                  {settings.heroImages.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {settings.heroImages.map((src, i) => (
-                        <div key={i} className="relative">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={src} alt={`Backdrop ${i + 1}`} className="h-16 w-24 object-cover rounded-lg border border-white/10" />
-                          <button type="button" onClick={() => setSettings(s => ({ ...s!, heroImages: s!.heroImages.filter((_, j) => j !== i) }))}
-                            className="absolute -top-1.5 -right-1.5 bg-[#161616] rounded-full p-0.5 text-zinc-400 hover:text-red-400"><X className="h-3 w-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <Input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleHeroUpload} ref={heroInputRef} className="mt-0 max-w-xs" />
-                    {uploadingHero && <Loader2 className="h-4 w-4 animate-spin text-[#22d3ee]" />}
-                  </div>
-                  <p className="text-[11px] text-zinc-600">Netflix-style slideshow behind the hero. Upload from your device — first image shows first. Empty = uses featured product covers.</p>
-                </div>
-              </div>
-            </div>
+      {/* Brand */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <h3 className="font-semibold text-white text-sm">Brand</h3>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><label className="text-xs text-zinc-500">Site name</label><input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+          <div><label className="text-xs text-zinc-500">Tagline</label><input value={tagline} onChange={e => setTagline(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={taglineVisible} onChange={e => setTaglineVisible(e.target.checked)} className="accent-[#f5c451]" /> Show tagline under name</label>
+        <div><label className="text-xs text-zinc-500">Site icon URL</label><input value={icon} onChange={e => setIcon(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+      </div>
 
-            <div className="pt-3 border-t border-white/10">
-              <Label className="mb-2 block">Trending slider (hero right side — most visited products)</Label>
-              <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => settings && autoSave({ ...settings, heroTrending: !settings.heroTrending })}
-                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${stOn(settings.heroTrending) ? stOnCls() : stOffCls()}`}>
-                  {settings.heroTrending ? '✓ Shown' : 'Hidden'} — master
-                </button>
-                <span className="text-zinc-600 text-xs">on</span>
-                <button type="button" disabled={!settings.heroTrending} onClick={() => settings && autoSave({ ...settings, heroTrendingDesktop: !settings.heroTrendingDesktop })}
-                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingDesktop) ? stOnCls() : stOffCls()}`}>
-                  <Monitor className="inline h-3.5 w-3.5 mr-1" />PC {settings.heroTrendingDesktop ? '✓' : '✗'}
-                </button>
-                <button type="button" disabled={!settings.heroTrending} onClick={() => settings && autoSave({ ...settings, heroTrendingMobile: !settings.heroTrendingMobile })}
-                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-40 ${stOn(settings.heroTrendingMobile) ? stOnCls() : stOffCls()}`}>
-                  <Smartphone className="inline h-3.5 w-3.5 mr-1" />Phone {settings.heroTrendingMobile ? '✓' : '✗'}
-                </button>
-              </div>
-            </div>
+      {/* Hero */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <h3 className="font-semibold text-white text-sm">Hero</h3>
+        {bilingual('Title', heroTitle.en, heroTitle.fr, setHeroTitle, setHeroTitle)}
+        {bilingual('Subtitle', heroSubtitle.en, heroSubtitle.fr, setHeroSubtitle, setHeroSubtitle)}
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><label className="text-xs text-zinc-500">Badge</label><input value={heroBadge} onChange={e => setHeroBadge(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={heroBadgeVisible} onChange={e => setHeroBadgeVisible(e.target.checked)} className="accent-[#f5c451]" /> Show badge</label>
+        <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={heroVisible} onChange={e => setHeroVisible(e.target.checked)} className="accent-[#f5c451]" /> Show hero section</label>
+      </div>
 
-            <div className="pt-3 border-t border-white/10">
-              <Label className="mb-1 block">Homepage sections — visibility, title &amp; order</Label>
-              <p className="text-[11px] text-zinc-600 mb-2">PC = medium+ screens, Phone = small screens. Hide a section everywhere with the master Shown/Hidden.</p>
-              <div className="space-y-2">
-                {orderedSections.map((sec, i) => (
-                  <div key={sec.key} className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-2.5">
-                    <Button type="button" variant="ghost" size="icon" onClick={() => moveSection(sec.key, -1)} disabled={i === 0} className="h-7 w-7 text-zinc-500 hover:text-white"><ArrowUp className="h-3.5 w-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => moveSection(sec.key, 1)} disabled={i === orderedSections.length - 1} className="h-7 w-7 text-zinc-500 hover:text-white"><ArrowDown className="h-3.5 w-3.5" /></Button>
-                    <span className="text-xs text-zinc-500 w-24 shrink-0">{sec.label}</span>
-                    <Input value={sec.title} onChange={e => setSettings(s => ({ ...s!, sections: s!.sections.map(x => x.key === sec.key ? { ...x, title: e.target.value } : x) }))} className="flex-1 h-8 text-xs min-w-24" placeholder="Section title" />
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button type="button" disabled={!sec.visible} onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, show_desktop: !x.show_desktop } : x) })}
-                        className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_desktop ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
-                        title="Show on PC">
-                        <Monitor className="inline h-3 w-3" />
-                      </button>
-                      <button type="button" disabled={!sec.visible} onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, show_mobile: !x.show_mobile } : x) })}
-                        className={`rounded-lg px-2 py-1.5 text-[10px] font-medium border transition disabled:opacity-35 ${sec.show_mobile ? 'border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]' : 'border-white/10 text-zinc-500'}`}
-                        title="Show on Phone">
-                        <Smartphone className="inline h-3 w-3" />
-                      </button>
-                      <button type="button" onClick={() => settings && autoSave({ ...settings, sections: settings.sections.map(x => x.key === sec.key ? { ...x, visible: !x.visible } : x) })}
-                        className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium border transition ${sec.visible ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-transparent text-zinc-500'}`}>
-                        {sec.visible ? <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Shown</span> : <span className="flex items-center gap-1"><EyeOff className="h-3 w-3" /> Hidden</span>}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Home sections */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <h3 className="font-semibold text-white text-sm">Home sections</h3>
+        {bilingual('New Arrivals', homeSectionNew.en, homeSectionNew.fr, setHomeSectionNew, setHomeSectionNew)}
+        {bilingual('Trending', homeSectionTrending.en, homeSectionTrending.fr, setHomeSectionTrending, setHomeSectionTrending)}
+        {bilingual('Featured', homeSectionFeatured.en, homeSectionFeatured.fr, setHomeSectionFeatured, setHomeSectionFeatured)}
+        {bilingual('Categories', homeSectionCategories.en, homeSectionCategories.fr, setHomeSectionCategories, setHomeSectionCategories)}
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><label className="text-xs text-zinc-500">Featured count</label><input type="number" value={homeFeaturedCount} onChange={e => setHomeFeaturedCount(Number(e.target.value))} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+          <div><label className="text-xs text-zinc-500">Trending count</label><input type="number" value={homeTrendingCount} onChange={e => setHomeTrendingCount(Number(e.target.value))} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+        </div>
+      </div>
 
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={savingHero}>{savingHero && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Save homepage</Button>
-              {heroMsg && <span className="text-sm text-emerald-400">{heroMsg}</span>}
-              {autoSaved && <span className="text-sm text-[#22d3ee]">✓ Saved instantly — toggles are saved automatically</span>}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {/* Contact */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <div className="flex items-center gap-2"><MessageSquare className="h-4 w-4 text-[#22d3ee]" /> <h3 className="font-semibold text-white text-sm">Contact</h3></div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><label className="text-xs text-zinc-500">WhatsApp URL</label><input value={contactWhatsApp} onChange={e => setContactWhatsApp(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+          <div><label className="text-xs text-zinc-500">Telegram URL</label><input value={contactTelegram} onChange={e => setContactTelegram(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+        </div>
+        <div><label className="text-xs text-zinc-500">Email</label><input value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm text-white outline-none" /></div>
+        <div className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={contactWhatsAppVisible} onChange={e => setContactWhatsAppVisible(e.target.checked)} className="accent-[#22d3ee]" /> WhatsApp</label>
+          <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={contactTelegramVisible} onChange={e => setContactTelegramVisible(e.target.checked)} className="accent-[#22d3ee]" /> Telegram</label>
+          <label className="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" checked={contactEmailVisible} onChange={e => setContactEmailVisible(e.target.checked)} className="accent-[#22d3ee]" /> Email</label>
+        </div>
+        {bilingual('Title', contactTitle.en, contactTitle.fr, setContactTitle, setContactTitle)}
+        {bilingual('Subtitle', contactSubtitle.en, contactSubtitle.fr, setContactSubtitle, setContactSubtitle)}
+      </div>
 
-      <Card className="border-white/10">
-        <CardHeader><CardTitle className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-[#22d3ee]" /> Admin login</CardTitle></CardHeader>
-        <CardContent className="p-6">
-          <p className="text-xs text-zinc-500 mb-4">
-            Change the email and password you use to sign in to this panel.
-            {platform === 'cloudflare'
-              ? ' On Cloudflare these are saved as secret variables — update them from your Worker dashboard when prompted.'
-              : ' Saved on the server; takes effect after restart.'}
-          </p>
-          <form onSubmit={saveCredentials} className="space-y-4 max-w-md">
-            <div>
-              <Label>Current password (required)</Label>
-              <Input type="password" value={creds.current_password} onChange={e => setCreds(c => ({ ...c, current_password: e.target.value }))} required className="mt-1.5" placeholder="Confirm it's you" />
-            </div>
-            <div>
-              <Label>Login email</Label>
-              <Input type="email" value={creds.new_email} onChange={e => setCreds(c => ({ ...c, new_email: e.target.value }))} className="mt-1.5" />
-            </div>
-            <div>
-              <Label>New password (leave blank to keep current)</Label>
-              <Input type="password" value={creds.new_password} onChange={e => setCreds(c => ({ ...c, new_password: e.target.value }))} className="mt-1.5" placeholder="min 8 characters" />
-            </div>
-            {authMsg && (
-              <div className={`rounded-xl p-3 border text-sm ${authMsg.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>{authMsg.text}</div>
-            )}
-            <Button type="submit" disabled={savingAuth}>{savingAuth && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Update login</Button>
-          </form>
-        </CardContent>
-      </Card>
+      {/* FAQ */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
+        <h3 className="font-semibold text-white text-sm mb-3">FAQ</h3>
+        {bilingual('Title', faqTitle.en, faqTitle.fr, setFaqTitle, setFaqTitle)}
+        {bilingual('Subtitle', faqSubtitle.en, faqSubtitle.fr, setFaqSubtitle, setFaqSubtitle)}
+      </div>
+
+      {/* Legal */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <h3 className="font-semibold text-white text-sm">Legal pages</h3>
+        {bilingual('Terms title', termsTitle.en, termsTitle.fr, setTermsTitle, setTermsTitle)}
+        {bilingual('Privacy title', privacyTitle.en, privacyTitle.fr, setPrivacyTitle, setPrivacyTitle)}
+      </div>
+
+      {/* Dashboard / 404 / search */}
+      <div className="rounded-2xl border border-white/10 bg-[#111] p-5 space-y-3">
+        <h3 className="font-semibold text-white text-sm">Dashboard & misc</h3>
+        {bilingual('Dashboard title', dashboardTitle.en, dashboardTitle.fr, setDashboardTitle, setDashboardDesc)}
+        {bilingual('Dashboard desc', dashboardDesc.en, dashboardDesc.fr, setDashboardDesc, setDashboardDesc)}
+        {bilingual('No products title', noProductsTitle.en, noProductsTitle.fr, setNoProductsTitle, setNoProductsTitle)}
+        {bilingual('No products desc', noProductsDesc.en, noProductsDesc.fr, setNoProductsDesc, setNoProductsDesc)}
+        {bilingual('Not found title', notFoundTitle.en, notFoundTitle.fr, setNotFoundTitle, setNotFoundDesc)}
+        {bilingual('Search title', searchTitle.en, searchTitle.fr, setSearchTitle, setSearchNoResults)}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button variant="primary" onClick={save} disabled={saving}>{saving ? 'Saving...' : <><Save className="h-4 w-4 mr-2" /> Save Settings</>}</Button>
+        {saved && <span className="text-sm text-emerald-400">Saved</span>}
+        {error && <span className="text-sm text-red-400">{error}</span>}
+      </div>
     </div>
   )
 }

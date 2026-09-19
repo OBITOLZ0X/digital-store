@@ -62,17 +62,53 @@ export interface ContactChannel {
   sort_order: number
 }
 
+export interface Bilingual { en: string; fr: string }
+
 export interface StoreSettings {
   siteName: string
   tagline: string
   currency: string
+  defaultLang: 'en' | 'fr'
   brandTagline: string // small text under the navbar site name ("PREMIUM STORE")
   brandTaglineVisible: boolean // show/hide that small text
   siteIcon?: string | null // uploaded favicon / navbar badge image
-  // --- Homepage control (admin Settings) ---
-  heroBadge: string // small pill text above the title
-  heroTitle: string // main headline (markdown-ish plain text)
-  heroSubtitle: string // paragraph under the title
+  // --- Bilingual admin texts (EN/FR) ---
+  heroTitle: Bilingual
+  heroSubtitle: Bilingual
+  heroBadge: string // small pill text above the title (single, not bilingual)
+  heroBadgeVisible: boolean
+  heroVisible: boolean
+  homeSectionNew: Bilingual
+  homeSectionTrending: Bilingual
+  homeSectionFeatured: Bilingual
+  homeSectionCategories: Bilingual
+  homeFeaturedCount: number
+  homeTrendingCount: number
+  // --- Contact ---
+  contactWhatsApp: string
+  contactTelegram: string
+  contactEmail: string
+  contactWhatsAppVisible: boolean
+  contactTelegramVisible: boolean
+  contactEmailVisible: boolean
+  contactTitle: Bilingual
+  contactSubtitle: Bilingual
+  // --- Legal ---
+  termsTitle: Bilingual
+  privacyTitle: Bilingual
+  // --- FAQ ---
+  faqTitle: Bilingual
+  faqSubtitle: Bilingual
+  // --- Dashboard / misc ---
+  dashboardTitle: Bilingual
+  dashboardDesc: Bilingual
+  noProductsTitle: Bilingual
+  noProductsDesc: Bilingual
+  notFoundTitle: Bilingual
+  notFoundDesc: Bilingual
+  searchTitle: Bilingual
+  searchNoResults: Bilingual
+  // --- Homepage control ---
   heroCtaText: string // primary button label
   heroImages: string[] // Netflix-style backdrop images (cycled as slider)
   heroTrending: boolean // show the trending-products slider in the hero
@@ -120,12 +156,46 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   siteName: 'DigitalStore',
   tagline: 'Premium digital products',
   currency: 'DZD',
+  defaultLang: 'en',
   brandTagline: 'Premium Store',
   brandTaglineVisible: true,
   siteIcon: null,
+  // Bilingual admin texts
+  heroTitle: { en: 'Premium Digital Subscriptions', fr: 'Abonnements Digitaux Premium' },
+  heroSubtitle: { en: 'Subscriptions, IPTV, software licenses, game cards and gift cards.', fr: 'Abonnements, IPTV, licences logicielles, cartes de jeu et cartes cadeaux.' },
   heroBadge: 'Order directly via WhatsApp • Telegram • No account needed',
-  heroTitle: 'Premium Digital Products at the Best Prices',
-  heroSubtitle: 'Subscriptions, IPTV, software licenses, game cards and gift cards. Browse, choose your plan, and message us on your favorite app — we handle the rest personally.',
+  heroBadgeVisible: true,
+  heroVisible: true,
+  homeSectionNew: { en: 'New Arrivals', fr: 'Nouveautés' },
+  homeSectionTrending: { en: 'Trending Now', fr: 'Populaires' },
+  homeSectionFeatured: { en: 'Featured', fr: 'Mis en avant' },
+  homeSectionCategories: { en: 'Categories', fr: 'Catégories' },
+  homeFeaturedCount: 8,
+  homeTrendingCount: 8,
+  // Contact
+  contactWhatsApp: '',
+  contactTelegram: '',
+  contactEmail: '',
+  contactWhatsAppVisible: false,
+  contactTelegramVisible: false,
+  contactEmailVisible: false,
+  contactTitle: { en: 'Need help?', fr: 'Besoin daide ?' },
+  contactSubtitle: { en: 'Message us on any platform — we respond fast, no account needed.', fr: 'Écrivez-nous sur nimporte quelle plateforme — réponse rapide, aucun compte requis.' },
+  // Legal
+  termsTitle: { en: 'Terms of Service', fr: "Conditions d'Utilisation" },
+  privacyTitle: { en: 'Privacy Policy', fr: 'Politique de Confidentialité' },
+  // FAQ
+  faqTitle: { en: 'Frequently Asked Questions', fr: 'Foire Aux Questions' },
+  faqSubtitle: { en: "Find answers to the most common questions about our store and products.", fr: "Trouvez les réponses aux questions les plus fréquentes sur notre magasin et nos produits." },
+  // Dashboard / misc
+  dashboardTitle: { en: 'Dashboard', fr: 'Tableau de Bord' },
+  dashboardDesc: { en: 'Overview of your store performance.', fr: "Vue densemble des performances de votre magasin." },
+  noProductsTitle: { en: 'No Products Yet', fr: "Pas encore de produits" },
+  noProductsDesc: { en: 'Check back soon — new products are added regularly.', fr: "Revenez bientôt — de nouveaux produits sont ajoutés régulièrement." },
+  notFoundTitle: { en: 'Product Not Found', fr: 'Produit Introuvable' },
+  notFoundDesc: { en: "This product may have been removed or the link is invalid.", fr: "Ce produit a peut-être été supprimé ou le lien est invalide." },
+  searchTitle: { en: 'Search Results', fr: 'Résultats de Recherche' },
+  searchNoResults: { en: 'No results found.', fr: "Aucun résultat trouvé." },
   heroCtaText: 'Explore Products',
   heroImages: [],
   heroTrending: true,
@@ -182,8 +252,6 @@ function migrateProduct(p: Product): Product {
 
 function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings {
   const merged = { ...DEFAULT_SETTINGS, ...(s || {}) }
-  if (!Array.isArray(merged.sections) || merged.sections.length === 0) merged.sections = DEFAULT_SECTIONS
-  if (!Array.isArray(merged.heroImages)) merged.heroImages = []
   // keep section list in sync with defaults (new keys get added, removed keys dropped)
   const byKey = new Map(merged.sections.map(x => [x.key, x]))
   merged.sections = DEFAULT_SECTIONS.map(def => {
@@ -197,6 +265,27 @@ function normalizeSettings(s: Partial<StoreSettings> | undefined): StoreSettings
   if (typeof (merged as any).heroTrending !== 'boolean') (merged as any).heroTrending = true
   if (typeof (merged as any).heroTrendingDesktop !== 'boolean') (merged as any).heroTrendingDesktop = true
   if (typeof (merged as any).heroTrendingMobile !== 'boolean') (merged as any).heroTrendingMobile = true
+  // defaults for new bilingual keys (only if missing so saved data is preserved)
+  if (!merged.heroTitle || typeof merged.heroTitle !== 'object') merged.heroTitle = { ...DEFAULT_SETTINGS.heroTitle }
+  if (!merged.heroSubtitle || typeof merged.heroSubtitle !== 'object') merged.heroSubtitle = { ...DEFAULT_SETTINGS.heroSubtitle }
+  if (!merged.homeSectionNew || typeof merged.homeSectionNew !== 'object') merged.homeSectionNew = { ...DEFAULT_SETTINGS.homeSectionNew }
+  if (!merged.homeSectionTrending || typeof merged.homeSectionTrending !== 'object') merged.homeSectionTrending = { ...DEFAULT_SETTINGS.homeSectionTrending }
+  if (!merged.homeSectionFeatured || typeof merged.homeSectionFeatured !== 'object') merged.homeSectionFeatured = { ...DEFAULT_SETTINGS.homeSectionFeatured }
+  if (!merged.homeSectionCategories || typeof merged.homeSectionCategories !== 'object') merged.homeSectionCategories = { ...DEFAULT_SETTINGS.homeSectionCategories }
+  if (!merged.contactTitle || typeof merged.contactTitle !== 'object') merged.contactTitle = { ...DEFAULT_SETTINGS.contactTitle }
+  if (!merged.contactSubtitle || typeof merged.contactSubtitle !== 'object') merged.contactSubtitle = { ...DEFAULT_SETTINGS.contactSubtitle }
+  if (!merged.faqTitle || typeof merged.faqTitle !== 'object') merged.faqTitle = { ...DEFAULT_SETTINGS.faqTitle }
+  if (!merged.faqSubtitle || typeof merged.faqSubtitle !== 'object') merged.faqSubtitle = { ...DEFAULT_SETTINGS.faqSubtitle }
+  if (!merged.termsTitle || typeof merged.termsTitle !== 'object') merged.termsTitle = { ...DEFAULT_SETTINGS.termsTitle }
+  if (!merged.privacyTitle || typeof merged.privacyTitle !== 'object') merged.privacyTitle = { ...DEFAULT_SETTINGS.privacyTitle }
+  if (!merged.dashboardTitle || typeof merged.dashboardTitle !== 'object') merged.dashboardTitle = { ...DEFAULT_SETTINGS.dashboardTitle }
+  if (!merged.dashboardDesc || typeof merged.dashboardDesc !== 'object') merged.dashboardDesc = { ...DEFAULT_SETTINGS.dashboardDesc }
+  if (!merged.noProductsTitle || typeof merged.noProductsTitle !== 'object') merged.noProductsTitle = { ...DEFAULT_SETTINGS.noProductsTitle }
+  if (!merged.noProductsDesc || typeof merged.noProductsDesc !== 'object') merged.noProductsDesc = { ...DEFAULT_SETTINGS.noProductsDesc }
+  if (!merged.notFoundTitle || typeof merged.notFoundTitle !== 'object') merged.notFoundTitle = { ...DEFAULT_SETTINGS.notFoundTitle }
+  if (!merged.notFoundDesc || typeof merged.notFoundDesc !== 'object') merged.notFoundDesc = { ...DEFAULT_SETTINGS.notFoundDesc }
+  if (!merged.searchTitle || typeof merged.searchTitle !== 'object') merged.searchTitle = { ...DEFAULT_SETTINGS.searchTitle }
+  if (!merged.searchNoResults || typeof merged.searchNoResults !== 'object') merged.searchNoResults = { ...DEFAULT_SETTINGS.searchNoResults }
   return merged
 }
 

@@ -1,3 +1,4 @@
+// Store landing — bilingual hero, sections, products, contacts.
 import { Navbar, Footer } from '@/app/components/layout/navbar-footer'
 import { ProductGrid, CategorySlider } from '@/app/components/products/product-card'
 import { Button } from '@/app/components/ui/ui'
@@ -5,16 +6,32 @@ import { getStoreProducts, getAllCategories } from '@/lib/queries'
 import { readStore } from '@/lib/store'
 import { ImageSlider } from '@/app/components/products/image-slider'
 import { HeroTrending } from '@/app/components/products/hero-trending'
+import { getLang } from '@/lib/i18n/server'
+import { t } from '@/lib/i18n'
 import { MessageCircle, Shield, Clock, Star, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+function splitBilingual(value: any, key: string): string {
+  if (!value) return ''
+  if (typeof value === 'object' && value !== null && key in value) return String(value[key])
+  if (typeof value === 'string') return value
+  return ''
+}
+
+function sectionTitle(s: any, key: string, fallback: string): string {
+  const def = s?.sections?.find((x: any) => x.key === key)
+  return def?.title || fallback
+}
+
 export default async function HomePage() {
   const store = await readStore()
   const s = store.settings
   const currency = s.currency || 'DZD'
-  const sec = (key: string) => s.sections?.find(x => x.key === key)
+  let lang: 'en' | 'fr' = 'en'
+  try { lang = await getLang() } catch {}
+  const T = (k: string) => t(lang, k)
 
   const [featuredRes, popularRes, newRes] = await Promise.all([
     getStoreProducts({ featured: true, limit: 8 }),
@@ -30,14 +47,12 @@ export default async function HomePage() {
     products: allActive.filter(p => (p.category_ids?.length ? p.category_ids.includes(c.id) : p.category_id === c.id)).slice(0, 6).map(p => ({ image_url: p.image_url, images: p.images || [] })),
   }))
 
-  // hero backdrop: admin-curated images, else featured product covers (Netflix-style)
   const heroImages = s.heroImages?.length
     ? s.heroImages
     : [...featured, ...newProducts].slice(0, 5).map((p: any) => p.image_url).filter(Boolean)
 
   const ordered = [...(s.sections || [])].sort((a, b) => a.sort - b.sort)
 
-  // top-5 most-visited products for the hero trending slider
   let visits: Record<string, { total: number }> = {}
   try {
     const { readVisits } = await import('@/lib/store')
@@ -49,57 +64,54 @@ export default async function HomePage() {
     .sort((a, b) => b.views - a.views)
     .slice(0, 5)
 
-  // per-device visibility helper
   const deviceClass = (d: boolean, m: boolean) =>
     d && m ? '' : d ? 'hidden md:block' : m ? 'md:hidden' : 'hidden'
-
-  // hero trending slider visibility (master + per device)
   const heroSliderClass = s.heroTrending === false ? 'hidden' : deviceClass(s.heroTrendingDesktop !== false, s.heroTrendingMobile !== false)
 
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     categories: () => categories.length > 0 ? (
       <section key="categories" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-14">
-        <h2 className="text-2xl font-bold text-white mb-6">{sec('categories')?.title || 'Browse Categories'}</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">{sectionTitle(s, 'categories', T('home.categories'))}</h2>
         <CategorySlider categories={categories as never} />
       </section>
     ) : null,
     featured: () => featured.length > 0 ? (
       <section key="featured" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Zap className="h-5 w-5 text-[#f5c451]" /> {sec('featured')?.title || 'Featured'}</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Zap className="h-5 w-5 text-[#f5c451]" /> {sectionTitle(s, 'featured', T('home.featured'))}</h2>
         <ProductGrid products={featured as never} currency={currency} />
       </section>
     ) : null,
     popular: () => popular.length > 0 ? (
       <section key="popular" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Star className="h-5 w-5 text-[#22d3ee]" /> {sec('popular')?.title || 'Popular'}</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Star className="h-5 w-5 text-[#22d3ee]" /> {sectionTitle(s, 'popular', T('home.trending'))}</h2>
         <ProductGrid products={popular as never} currency={currency} />
       </section>
     ) : null,
     newest: () => newProducts.length > 0 ? (
       <section key="newest" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8 pb-16">
-        <h2 className="text-2xl font-bold text-white mb-6">{sec('newest')?.title || 'New Arrivals'}</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">{sectionTitle(s, 'newest', T('home.new'))}</h2>
         <ProductGrid products={newProducts as never} currency={currency} />
       </section>
     ) : null,
     howitworks: () => (
       <section key="howitworks" className="border-t border-white/5 bg-white/[0.02]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-          <h2 className="text-2xl font-bold text-white text-center mb-10">{sec('howitworks')?.title || 'How it works'}</h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-10">{T('home.how')}</h2>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">1</div>
-              <h3 className="font-semibold text-white mb-2">Pick a product</h3>
-              <p className="text-sm text-zinc-400">Browse the catalog and choose the plan and duration that fits you.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.howPick')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.howPickDesc')}</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">2</div>
-              <h3 className="font-semibold text-white mb-2">Message us</h3>
-              <p className="text-sm text-zinc-400">Tap WhatsApp, Telegram or any contact button on the product page.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.howMsg')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.howMsgDesc')}</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">3</div>
-              <h3 className="font-semibold text-white mb-2">Get it</h3>
-              <p className="text-sm text-zinc-400">We confirm payment and deliver everything in the chat — quick and personal.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.howGet')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.howGetDesc')}</p>
             </div>
           </div>
         </div>
@@ -137,19 +149,19 @@ export default async function HomePage() {
                 </div>
               )}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]">
-                {s.heroTitle.split('|').map((part, i) => (
+                {splitBilingual(s.heroTitle, lang) || s.heroTitle.split('|').map((part: string, i: number) => (
                   <span key={i} className={i % 2 === 1 ? 'bg-gradient-to-r from-[#f5c451] to-[#fbbf24] bg-clip-text text-transparent' : ''}>{part.trim()}{i < s.heroTitle.split('|').length - 1 ? ' ' : ''}</span>
                 ))}
               </h1>
-              <p className="mt-4 sm:mt-5 text-base sm:text-lg text-zinc-300/90 leading-relaxed">{s.heroSubtitle}</p>
+              <p className="mt-4 sm:mt-5 text-base sm:text-lg text-zinc-300/90 leading-relaxed">{splitBilingual(s.heroSubtitle, lang) || s.heroSubtitle}</p>
               <div className="mt-6 sm:mt-8 flex flex-wrap gap-3">
                 <Link href="/shop"><Button size="lg" className="rounded-full px-8 bg-[#f5c451] text-black hover:bg-[#ffd76e] shadow-[0_0_30px_rgba(245,196,81,0.35)] border-0">{s.heroCtaText || 'Explore Products'}</Button></Link>
-                <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">Contact Us</Button></Link>
+                <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">{T('home.contactUs')}</Button></Link>
               </div>
               <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                 <div className="flex items-center gap-2 text-zinc-300"><Shield className="h-4 w-4 text-[#f5c451]"/> Trusted Seller</div>
                 <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> Fast Replies</div>
-                <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
+                <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> {T('home.orderVia')}</div>
               </div>
             </div>
             {trending.length > 0 && (
@@ -173,12 +185,12 @@ export default async function HomePage() {
       {/* Empty state */}
       {!anyProduct && categories.length === 0 && (
         <section className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-xl font-bold text-white mb-2">No products yet</h2>
-          <p className="text-zinc-500 text-sm">Products added from the admin panel will appear here.</p>
+          <h2 className="text-xl font-bold text-white mb-2">{T('home.noProducts')}</h2>
+          <p className="text-zinc-500 text-sm">{T('home.noProductsDesc')}</p>
         </section>
       )}
 
-      <Footer />
+      <Footer lang={lang} />
     </div>
   )
 }
