@@ -9,6 +9,9 @@ import { MessageCircle, Shield, Clock } from 'lucide-react'
 import { ImageSlider } from '@/app/components/products/image-slider'
 import { ProductPurchase } from './product-purchase'
 import { TutorialVideo } from './tutorial-video'
+import { getLang } from '@/lib/i18n/server'
+import { t } from '@/lib/i18n'
+import { LangContext } from '@/lib/i18n/context'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +20,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const data = await getProductBySlug(slug)
   if (!data) notFound()
   const { product: p, variants, relatedProducts: related } = data
+  const lang = await getLang()
   const [contacts, settings] = await Promise.all([getContactChannels(), getSettings()])
   const currency = settings.currency || 'DZD'
   const chosen = p.contact_channels?.length ? contacts.filter(c => p.contact_channels.includes(c.id)) : contacts
@@ -32,7 +36,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <Navbar />
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-sm text-zinc-500 mb-4">
-          <Link href="/" className="hover:text-white">Home</Link> / <Link href="/shop" className="hover:text-white">Shop</Link>{p.category ? <> / <Link href={`/categories/${p.category.slug}`} className="hover:text-white">{p.category.name}</Link></> : null} / <span className="text-white">{p.name}</span>
+          <Link href="/" className="hover:text-white">{t(lang, 'product.home')}</Link> / <Link href="/shop" className="hover:text-white">{t(lang, 'nav.shop')}</Link>{p.category ? <> / <Link href={`/categories/${p.category.slug}`} className="hover:text-white">{p.category.name}</Link></> : null} / <span className="text-white">{p.name}</span>
         </div>
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
@@ -40,9 +44,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {p.tutorial_url ? <TutorialVideo url={p.tutorial_url} /> : null}
             {/* Landing-style benefits */}
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><MessageCircle className="h-5 w-5 mx-auto text-[#22d3ee] mb-1"/> Order via chat</div>
-              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><Clock className="h-5 w-5 mx-auto text-[#f5c451] mb-1"/> Fast reply</div>
-              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><Shield className="h-5 w-5 mx-auto text-amber-400 mb-1"/> Trusted seller</div>
+              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><MessageCircle className="h-5 w-5 mx-auto text-[#22d3ee] mb-1"/> {t(lang, 'product.orderChat')}</div>
+              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><Clock className="h-5 w-5 mx-auto text-[#f5c451] mb-1"/> {t(lang, 'product.fastReply')}</div>
+              <div className="rounded-2xl border border-white/5 bg-[#111] p-3"><Shield className="h-5 w-5 mx-auto text-amber-400 mb-1"/> {t(lang, 'product.trusted')}</div>
             </div>
           </div>
 
@@ -50,7 +54,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {p.category && <Badge variant="secondary">{p.category.name}</Badge>}
-                {p.is_popular && <Badge variant="success">Popular</Badge>}
+                {p.is_popular && <Badge variant="success">{t(lang, 'product.popular')}</Badge>}
                 {discount>0 && <Badge variant="destructive">-{discount}%</Badge>}
               </div>
               <h1 className="text-3xl font-bold text-white">{p.name}</h1>
@@ -64,14 +68,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               compareAtPrice={p.compare_at_price}
               currency={currency}
               productName={p.name}
+              lang={lang}
               channels={chosen.map(c => ({ id: c.id, label: c.label, type: c.type, url: c.url || contactHref(c.type, c.value), color: c.color }))}
             />
 
             <Card>
               <CardContent className="p-5 space-y-4 text-sm">
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Description</h3>
-                  <p className="text-zinc-400 leading-relaxed whitespace-pre-line">{p.description || 'Contact us for full details about this product.'}</p>
+                  <h3 className="font-semibold text-white mb-1">{t(lang, 'product.description')}</h3>
+                  <p className="text-zinc-400 leading-relaxed whitespace-pre-line">{p.description || t(lang, 'product.descriptionFallback')}</p>
                 </div>
                 {p.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -85,12 +90,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {related.length > 0 && (
           <section className="mt-14">
-            <h2 className="text-xl font-bold text-white mb-6">Related Products</h2>
-            <ProductGrid products={related as never} currency={currency} />
+            <h2 className="text-xl font-bold text-white mb-6">{t(lang, 'product.related')}</h2>
+            <LangContext.Provider value={lang}><ProductGrid products={related as never} currency={currency} /></LangContext.Provider>
           </section>
         )}
       </div>
-      <Footer />
+      <Footer lang={lang} />
     </div>
   )
 }

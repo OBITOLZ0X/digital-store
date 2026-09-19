@@ -3,6 +3,9 @@ import { ProductGrid, CategorySlider } from '@/app/components/products/product-c
 import { Button } from '@/app/components/ui/ui'
 import { getStoreProducts, getAllCategories } from '@/lib/queries'
 import { readStore } from '@/lib/store'
+import { getLang } from '@/lib/i18n/server'
+import { t } from '@/lib/i18n'
+import { LangContext } from '@/lib/i18n/context'
 import { ImageSlider } from '@/app/components/products/image-slider'
 import { HeroTrending } from '@/app/components/products/hero-trending'
 import { MessageCircle, Shield, Clock, Star, Zap } from 'lucide-react'
@@ -13,6 +16,8 @@ export const dynamic = 'force-dynamic'
 export default async function HomePage() {
   const store = await readStore()
   const s = store.settings
+  const lang = await getLang()
+  const T = (k: string, v?: Record<string,string|number>) => t(lang, k, v)
   const currency = s.currency || 'DZD'
   const sec = (key: string) => s.sections?.find(x => x.key === key)
 
@@ -59,47 +64,47 @@ export default async function HomePage() {
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     categories: () => categories.length > 0 ? (
       <section key="categories" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-14">
-        <h2 className="text-2xl font-bold text-white mb-6">{sec('categories')?.title || 'Browse Categories'}</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">{sec('categories')?.title || T('home.browseCategories')}</h2>
         <CategorySlider categories={categories as never} />
       </section>
     ) : null,
     featured: () => featured.length > 0 ? (
       <section key="featured" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Zap className="h-5 w-5 text-[#f5c451]" /> {sec('featured')?.title || 'Featured'}</h2>
-        <ProductGrid products={featured as never} currency={currency} />
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Zap className="h-5 w-5 text-[#f5c451]" /> {sec('featured')?.title || T('home.featured')}</h2>
+        <LangContext.Provider value={lang}><ProductGrid products={featured as never} currency={currency} /></LangContext.Provider>
       </section>
     ) : null,
     popular: () => popular.length > 0 ? (
       <section key="popular" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Star className="h-5 w-5 text-[#22d3ee]" /> {sec('popular')?.title || 'Popular'}</h2>
-        <ProductGrid products={popular as never} currency={currency} />
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6"><Star className="h-5 w-5 text-[#22d3ee]" /> {sec('popular')?.title || T('home.popular')}</h2>
+        <LangContext.Provider value={lang}><ProductGrid products={popular as never} currency={currency} /></LangContext.Provider>
       </section>
     ) : null,
     newest: () => newProducts.length > 0 ? (
       <section key="newest" className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8 pb-16">
-        <h2 className="text-2xl font-bold text-white mb-6">{sec('newest')?.title || 'New Arrivals'}</h2>
-        <ProductGrid products={newProducts as never} currency={currency} />
+        <h2 className="text-2xl font-bold text-white mb-6">{sec('newest')?.title || T('home.newArrivals')}</h2>
+        <LangContext.Provider value={lang}><ProductGrid products={newProducts as never} currency={currency} /></LangContext.Provider>
       </section>
     ) : null,
     howitworks: () => (
       <section key="howitworks" className="border-t border-white/5 bg-white/[0.02]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-          <h2 className="text-2xl font-bold text-white text-center mb-10">{sec('howitworks')?.title || 'How it works'}</h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-10">{sec('howitworks')?.title || T('home.howItWorks')}</h2>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">1</div>
-              <h3 className="font-semibold text-white mb-2">Pick a product</h3>
-              <p className="text-sm text-zinc-400">Browse the catalog and choose the plan and duration that fits you.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.step1Title')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.step1Text')}</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">2</div>
-              <h3 className="font-semibold text-white mb-2">Message us</h3>
-              <p className="text-sm text-zinc-400">Tap WhatsApp, Telegram or any contact button on the product page.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.step2Title')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.step2Text')}</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-[#111] p-6 text-center">
               <div className="h-12 w-12 rounded-2xl bg-[#22d3ee]/10 text-[#22d3ee] flex items-center justify-center mx-auto mb-4 text-xl font-black">3</div>
-              <h3 className="font-semibold text-white mb-2">Get it</h3>
-              <p className="text-sm text-zinc-400">We confirm payment and deliver everything in the chat — quick and personal.</p>
+              <h3 className="font-semibold text-white mb-2">{T('home.step3Title')}</h3>
+              <p className="text-sm text-zinc-400">{T('home.step3Text')}</p>
             </div>
           </div>
         </div>
@@ -144,12 +149,12 @@ export default async function HomePage() {
               <p className="mt-4 sm:mt-5 text-base sm:text-lg text-zinc-300/90 leading-relaxed">{s.heroSubtitle}</p>
               <div className="mt-6 sm:mt-8 flex flex-wrap gap-3">
                 <Link href="/shop"><Button size="lg" className="rounded-full px-8 bg-[#f5c451] text-black hover:bg-[#ffd76e] shadow-[0_0_30px_rgba(245,196,81,0.35)] border-0">{s.heroCtaText || 'Explore Products'}</Button></Link>
-                <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">Contact Us</Button></Link>
+                <Link href="/contact"><Button size="lg" className="rounded-full px-8 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]" variant="outline">{T('home.contactUs')}</Button></Link>
               </div>
               <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
-                <div className="flex items-center gap-2 text-zinc-300"><Shield className="h-4 w-4 text-[#f5c451]"/> Trusted Seller</div>
-                <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> Fast Replies</div>
-                <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> Order via Chat</div>
+                <div className="flex items-center gap-2 text-zinc-300"><Shield className="h-4 w-4 text-[#f5c451]"/> {T('home.trusted')}</div>
+                <div className="flex items-center gap-2 text-zinc-300"><Clock className="h-4 w-4 text-[#22d3ee]"/> {T('home.fastReplies')}</div>
+                <div className="flex items-center gap-2 text-zinc-300"><MessageCircle className="h-4 w-4 text-amber-400"/> {T('home.orderChat')}</div>
               </div>
             </div>
             {trending.length > 0 && (
@@ -173,12 +178,12 @@ export default async function HomePage() {
       {/* Empty state */}
       {!anyProduct && categories.length === 0 && (
         <section className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-xl font-bold text-white mb-2">No products yet</h2>
-          <p className="text-zinc-500 text-sm">Products added from the admin panel will appear here.</p>
+          <h2 className="text-xl font-bold text-white mb-2">{T('home.emptyTitle')}</h2>
+          <p className="text-zinc-500 text-sm">{T('home.emptyText')}</p>
         </section>
       )}
 
-      <Footer />
+      <Footer lang={lang} />
     </div>
   )
 }

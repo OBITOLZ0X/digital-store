@@ -1,4 +1,6 @@
 'use client'
+import { t } from '@/lib/i18n'
+import { useLang } from '@/lib/i18n/context'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -15,10 +17,11 @@ interface CurrencyProp { currency?: string }
 
 /**
  * Minimal cinematic poster slider — pure product images, no frames/badges.
- * Hover reveals a bottom gradient with name + "From X" price. Auto-rotates,
+ * Hover reveals a bottom gradient with name + "{t(lang, 'home.from')} X" price. Auto-rotates,
  * arrows on hover, snap dots. Click → product page.
  */
 export function HeroTrending({ products, currency = 'DZD' }: { products: HeroProduct[] } & CurrencyProp) {
+  const lang = useLang()
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [tick, setTick] = useState(0) // bumped on manual nav -> restarts the interval
@@ -64,7 +67,7 @@ export function HeroTrending({ products, currency = 'DZD' }: { products: HeroPro
             <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent px-5 pb-5 pt-16 transition-opacity duration-300 ${i === index ? 'opacity-0 group-hover:opacity-100 hover:opacity-100' : ''}`}>
               <div className="font-bold text-white text-lg leading-tight line-clamp-2">{p.name}</div>
               <div className="mt-1 text-sm font-semibold text-[#f5c451]">
-                From {Number(p.price).toLocaleString('en-US')} {currency}
+                {t(lang, 'home.from')} {Number(p.price).toLocaleString('en-US')} {currency}
               </div>
             </div>
           </Link>

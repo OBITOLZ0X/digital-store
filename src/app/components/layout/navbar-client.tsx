@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Search, Menu, X } from 'lucide-react'
+import { t, type Lang } from '@/lib/i18n'
 
-export function NavbarSearch() {
+export function NavbarSearch({ lang = 'en' as Lang }: { lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -24,7 +25,7 @@ export function NavbarSearch() {
         value={q}
         onChange={e => setQ(e.target.value)}
         onBlur={() => { if (!q) setOpen(false) }}
-        placeholder="What are you looking for?"
+        placeholder={t(lang, "nav.searchPlaceholder")}
         className="w-40 sm:w-56 rounded-full border border-[#22d3ee]/30 bg-[#111] pl-9 pr-8 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/50 transition-all"
       />
       <button type="button" onClick={() => { setOpen(false); setQ('') }} aria-label="Close search"
@@ -40,7 +41,7 @@ export function NavbarSearch() {
   )
 }
 
-export function NavbarMobile({ cats, siteName, siteIcon }: { cats: { name: string; slug: string }[]; siteName: string; siteIcon: string | null }) {
+export function NavbarMobile({ cats, siteName, siteIcon, lang = 'en' as Lang }: { cats: { name: string; slug: string }[]; siteName: string; siteIcon: string | null; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -50,10 +51,10 @@ export function NavbarMobile({ cats, siteName, siteIcon }: { cats: { name: strin
       {open && (
         <div className="absolute top-[72px] left-0 right-0 border-b border-white/5 bg-[#0a0a0a]/95 backdrop-blur-xl lg:hidden">
           <div className="mx-auto max-w-7xl px-4 py-4 flex flex-col gap-1">
-            <Link href="/shop" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm font-semibold text-[#f5c451] hover:bg-white/5">Shop</Link>
+            <Link href="/shop" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm font-semibold text-[#f5c451] hover:bg-white/5">{t(lang, 'nav.shop')}</Link>
             {cats.map(c => <Link key={c.slug} href={`/categories/${c.slug}`} onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-zinc-300 hover:bg-white/5 hover:text-white">{c.name}</Link>)}
-            <Link href="/faq" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-zinc-300 hover:bg-white/5 hover:text-white">FAQ</Link>
-            <Link href="/contact" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-zinc-300 hover:bg-white/5 hover:text-white">Contact</Link>
+            <Link href="/faq" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-zinc-300 hover:bg-white/5 hover:text-white">{t(lang, 'nav.faq')}</Link>
+            <Link href="/contact" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-zinc-300 hover:bg-white/5 hover:text-white">{t(lang, 'nav.contact')}</Link>
           </div>
         </div>
       )}

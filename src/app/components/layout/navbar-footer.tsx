@@ -4,6 +4,9 @@ import { Search, Menu, X } from 'lucide-react'
 import { getAllCategories } from '@/lib/queries'
 import { readStore } from '@/lib/store'
 import { NavbarSearch, NavbarMobile } from './navbar-client'
+import { LanguageSwitcher } from './language-switcher'
+import { getLang } from '@/lib/i18n/server'
+import { t, type Lang } from '@/lib/i18n'
 
 export async function Navbar() {
   let cats: { name: string; slug: string }[] = []
@@ -11,6 +14,7 @@ export async function Navbar() {
   let siteIcon: string | null = null
   let brandTagline = 'Premium Store'
   let brandTaglineVisible = true
+  let lang: Lang = 'en'
   try {
     const [catsRes, store] = await Promise.all([getAllCategories(), readStore()])
     cats = catsRes.slice(0, 4)
@@ -19,6 +23,9 @@ export async function Navbar() {
     if (store.settings?.brandTagline !== undefined) brandTagline = store.settings.brandTagline
     brandTaglineVisible = store.settings?.brandTaglineVisible !== false
   } catch {}
+
+  // language (outside try so the navbar still renders if the store read fails)
+  try { lang = await getLang() } catch {}
 
   // two-tone wordmark: first part white, last part gold
   // two-tone split: multi-word -> last word gold; single CamelCase word -> split at inner uppercase; fallback = half
@@ -32,6 +39,7 @@ export async function Navbar() {
     return [n.slice(0, half), n.slice(half)]
   }
   const [nameFirst, nameGold] = splitName(siteName)
+  const T = (k: string) => t(lang, k)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0a]/70 backdrop-blur-xl">
@@ -59,22 +67,23 @@ export async function Navbar() {
 
           {/* Center nav */}
           <nav className="hidden lg:flex items-center gap-8 text-[15px] text-zinc-300">
-            <Link href="/shop" className="hover:text-[#f5c451] transition">Shop</Link>
+            <Link href="/shop" className="hover:text-[#f5c451] transition">{T('nav.shop')}</Link>
             {cats.slice(0, 3).map(c => <Link key={c.slug} href={`/categories/${c.slug}`} className="hover:text-[#f5c451] transition">{c.name}</Link>)}
-            <Link href="/faq" className="hover:text-[#f5c451] transition">FAQ</Link>
-            <Link href="/contact" className="hover:text-[#f5c451] transition">Contact</Link>
+            <Link href="/faq" className="hover:text-[#f5c451] transition">{T('nav.faq')}</Link>
+            <Link href="/contact" className="hover:text-[#f5c451] transition">{T('nav.contact')}</Link>
           </nav>
 
           {/* Right CTAs: search expandable + Shop (gold) */}
           <div className="flex items-center gap-2.5">
             {/* Expandable search — collapsed icon, expands to input on click (client) */}
-            <NavbarSearch />
+            <NavbarSearch lang={lang} />
+            <LanguageSwitcher lang={lang} />
             <Link href="/shop"
               className="hidden sm:inline-flex items-center rounded-full bg-[#f5c451] px-6 py-2.5 text-sm font-semibold text-black shadow-[0_0_25px_rgba(245,196,81,0.45)] transition hover:bg-[#ffd76e] hover:shadow-[0_0_35px_rgba(245,196,81,0.6)]">
-              Shop
+              {T('nav.shop')}
             </Link>
             {/* Mobile menu toggle */}
-            <NavbarMobile cats={cats} siteName={siteName} siteIcon={siteIcon} />
+            <NavbarMobile cats={cats} siteName={siteName} siteIcon={siteIcon} lang={lang} />
           </div>
         </div>
       </div>
@@ -82,7 +91,7 @@ export async function Navbar() {
   )
 }
 
-export async function Footer() {
+export async function Footer({ lang = 'en' as Lang }: { lang?: Lang }) {
   let siteName = 'DigitalStore'
   let siteIcon: string | null = null
   try { const store = await readStore(); if (store.settings?.siteName) siteName = store.settings.siteName; siteIcon = store.settings?.siteIcon || null } catch {}
@@ -99,26 +108,26 @@ export async function Footer() {
               )}
               <span className="font-bold text-white">{siteName}</span>
             </div>
-            <p className="text-zinc-500 leading-relaxed">Browse the catalog, pick your plan, and order directly through our social channels. Fast responses, no account needed.</p>
+            <p className="text-zinc-500 leading-relaxed">{t(lang, 'footer.about')}</p>
           </div>
           <div>
-            <h4 className="font-semibold text-white mb-3">Quick Links</h4>
+            <h4 className="font-semibold text-white mb-3">{t(lang, 'footer.quickLinks')}</h4>
             <ul className="space-y-2 text-zinc-500">
               <li><Link href="/shop" className="hover:text-white">Shop</Link></li>
               <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              <li><Link href="/terms" className="hover:text-white">Terms</Link></li>
-              <li><Link href="/privacy" className="hover:text-white">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-white">{t(lang, 'footer.terms')}</Link></li>
+              <li><Link href="/privacy" className="hover:text-white">{t(lang, 'footer.privacy')}</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-white mb-3">How to buy</h4>
-            <p className="text-zinc-500 leading-relaxed">Open any product, choose your duration, then message us on WhatsApp, Telegram or any channel shown on the product page. We confirm your order there.</p>
+            <h4 className="font-semibold text-white mb-3">{t(lang, 'footer.howToBuy')}</h4>
+            <p className="text-zinc-500 leading-relaxed">{t(lang, 'footer.howToBuyText')}</p>
           </div>
         </div>
         <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between gap-4 text-xs text-zinc-600">
-          <span>© {new Date().getFullYear()} {siteName}. All rights reserved.</span>
-          <span>Order via WhatsApp / Telegram • No account needed</span>
+          <span>© {new Date().getFullYear()} {siteName}. {t(lang, 'footer.rights')}</span>
+          <span>{t(lang, 'footer.orderVia')}</span>
         </div>
       </div>
     </footer>

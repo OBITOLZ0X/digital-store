@@ -67,6 +67,7 @@ export interface StoreSettings {
   tagline: string
   currency: string
   brandTagline: string // small text under the navbar site name ("PREMIUM STORE")
+  defaultLang?: 'en' | 'fr' // storefront language for first-time visitors
   brandTaglineVisible: boolean // show/hide that small text
   siteIcon?: string | null // uploaded favicon / navbar badge image
   // --- Homepage control (admin Settings) ---
@@ -121,6 +122,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   tagline: 'Premium digital products',
   currency: 'DZD',
   brandTagline: 'Premium Store',
+  defaultLang: 'en',
   brandTaglineVisible: true,
   siteIcon: null,
   heroBadge: 'Order directly via WhatsApp • Telegram • No account needed',

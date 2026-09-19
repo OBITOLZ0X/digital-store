@@ -3,48 +3,52 @@ import { Card, CardContent } from '@/app/components/ui/ui'
 import { getContactChannels } from '@/lib/queries'
 import { contactHref } from '@/lib/store'
 import { MessageCircle, HelpCircle, Clock, ShieldCheck, RefreshCw, Send } from 'lucide-react'
+import { getLang } from '@/lib/i18n/server'
+import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function FaqPage(){
+  const lang = await getLang()
   const contacts = await getContactChannels()
+  const T = (k: string) => t(lang, k)
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><HelpCircle className="h-7 w-7 text-[#22d3ee]" /> Frequently Asked Questions</h1>
-        <p className="text-zinc-500 mb-8">Everything about ordering — no account needed.</p>
+        <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><HelpCircle className="h-7 w-7 text-[#22d3ee]" /> {T('faq.title')}</h1>
+        <p className="text-zinc-500 mb-8">{T('faq.subtitle')}</p>
 
         <div className="space-y-4">
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> How do I buy a product?</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">Open the product page, choose the period/plan you want, then tap one of the contact buttons (WhatsApp, Telegram, …). Message us with the product name and period — we confirm your order and arrange payment directly in the chat. No registration, no balance, no checkout.</p>
+              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[#22d3ee]" /> {T('faq.q1')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{T('faq.a1')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><Clock className="h-4 w-4 text-emerald-400" /> How fast do you reply?</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">We usually reply within minutes during the day. You&apos;ll always see current response behavior once we start chatting.</p>
+              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><Clock className="h-4 w-4 text-emerald-400" /> {T('faq.q2')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{T('faq.a2')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><RefreshCw className="h-4 w-4 text-amber-400" /> Do you have the plan I want?</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">Every product page lists all available periods and their prices. If you need something custom, just message us — we often accommodate.</p>
+              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><RefreshCw className="h-4 w-4 text-amber-400" /> {T('faq.q3')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{T('faq.a3')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#22d3ee]" /> Is it safe to order this way?</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">Yes. You talk directly with us, payment is confirmed in the chat before anything is delivered, and everything you order is documented in the conversation.</p>
+              <h3 className="font-semibold text-white mb-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#22d3ee]" /> {T('faq.q4')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{T('faq.a4')}</p>
             </CardContent>
           </Card>
         </div>
 
         {contacts.length > 0 && (
           <div className="mt-10 rounded-3xl border border-[#22d3ee]/25 bg-[#22d3ee]/[0.04] p-6">
-            <h2 className="font-semibold text-white mb-3 flex items-center gap-2"><Send className="h-4 w-4 text-[#22d3ee]" /> Reach us directly</h2>
+            <h2 className="font-semibold text-white mb-3 flex items-center gap-2"><Send className="h-4 w-4 text-[#22d3ee]" /> {T('faq.reachUs')}</h2>
             <ul className="flex flex-wrap gap-3">
               {contacts.map(c => (
                 <li key={c.id}>
@@ -57,7 +61,7 @@ export default async function FaqPage(){
           </div>
         )}
       </div>
-      <Footer />
+      <Footer lang={lang} />
     </div>
   )
 }
