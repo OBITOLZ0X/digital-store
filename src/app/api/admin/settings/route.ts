@@ -16,6 +16,10 @@ export async function PATCH(req: NextRequest) {
   const store = await readStore()
   if (body.siteName !== undefined) store.settings.siteName = String(body.siteName).trim() || store.settings.siteName
   if (body.tagline !== undefined) store.settings.tagline = String(body.tagline)
+  if (body.defaultLang !== undefined) {
+    const dl = String(body.defaultLang)
+    store.settings.defaultLang = dl === 'fr' ? 'fr' : 'en'
+  }
   if (body.currency !== undefined) store.settings.currency = String(body.currency).trim().toUpperCase() || store.settings.currency
   if (body.brandTagline !== undefined) store.settings.brandTagline = String(body.brandTagline)
   if (body.brandTaglineVisible !== undefined) store.settings.brandTaglineVisible = !!body.brandTaglineVisible
